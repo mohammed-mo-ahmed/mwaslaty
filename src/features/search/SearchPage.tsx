@@ -21,11 +21,11 @@ const mockResults: RouteResult[] = [
     cost: '18 EGP',
     distance: '45 km',
     steps: [
-      {instruction: 'Walk to nearest Metro station', mode: 'Walk', duration: '5 min'},
-      {instruction: 'Take Metro Line 1 to Sadat', mode: 'Metro', duration: '25 min'},
-      {instruction: 'Transfer to Metro Line 2', mode: 'Metro', duration: '5 min'},
-      {instruction: 'Take Metro Line 2 to Giza', mode: 'Metro', duration: '20 min'},
-      {instruction: 'Take Bus #381 to destination', mode: 'Bus', duration: '35 min'}
+      {instruction: 'search.steps.walkToMetro', mode: 'Walk', duration: '5 min'},
+      {instruction: 'search.steps.metroLine1', mode: 'Metro', duration: '25 min'},
+      {instruction: 'search.steps.transferL2', mode: 'Metro', duration: '5 min'},
+      {instruction: 'search.steps.metroLine2', mode: 'Metro', duration: '20 min'},
+      {instruction: 'search.steps.bus381', mode: 'Bus', duration: '35 min'}
     ]
   },
   {
@@ -34,10 +34,10 @@ const mockResults: RouteResult[] = [
     cost: '14 EGP',
     distance: '52 km',
     steps: [
-      {instruction: 'Walk to bus stop', mode: 'Walk', duration: '8 min'},
-      {instruction: 'Take Bus #174 to Ramses', mode: 'Bus', duration: '40 min'},
-      {instruction: 'Transfer to Microbus #927', mode: 'Microbus', duration: '1h 15m'},
-      {instruction: 'Walk to destination', mode: 'Walk', duration: '12 min'}
+      {instruction: 'search.steps.walkToBus', mode: 'Walk', duration: '8 min'},
+      {instruction: 'search.steps.bus174', mode: 'Bus', duration: '40 min'},
+      {instruction: 'search.steps.microbus927', mode: 'Microbus', duration: '1h 15m'},
+      {instruction: 'search.steps.walkToDest', mode: 'Walk', duration: '12 min'}
     ]
   }
 ];
@@ -120,7 +120,7 @@ export function SearchPage() {
           {results.map((route) => (
             <div key={route.id} className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-semibold text-gray-950">Route {route.id}</h3>
+                <h3 className="font-semibold text-gray-950">{t('common.route')} {route.id}</h3>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                   <span className="flex items-center"><Clock className="me-1 h-4 w-4" />{route.duration}</span>
                   <span className="flex items-center"><DollarSign className="me-1 h-4 w-4" />{route.cost}</span>
@@ -132,9 +132,9 @@ export function SearchPage() {
                   <div key={`${route.id}-${step.instruction}`} className="flex items-start gap-3">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm text-white">{index + 1}</span>
                     <div>
-                      <p className="text-gray-900">{step.instruction}</p>
+                      <p className="text-gray-900">{t(step.instruction)}</p>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className={`rounded-full px-2 py-1 text-xs ${modeColor(step.mode)}`}>{step.mode}</span>
+                        <span className={`rounded-full px-2 py-1 text-xs ${modeColor(step.mode)}`}>{t(`common.${step.mode.toLowerCase()}`)}</span>
                         <span className="text-sm text-gray-500">{step.duration}</span>
                       </div>
                     </div>

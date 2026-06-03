@@ -29,7 +29,7 @@ export function AppLayout({children}: {children: React.ReactNode}) {
     {key: 'search', href: '/search', icon: Search},
     {key: 'importantStops', href: '/stops', icon: MapPin},
     {key: 'userRoutes', href: '/user-routes', icon: Users},
-    {key: 'credits', href: '/credits', icon: Coins}
+    ...(isAuthenticated ? [{key: 'credits', href: '/credits', icon: Coins}] : [])
   ];
 
   const localizePath = (href: string) => `/${locale}${href === '/' ? '' : href}`;

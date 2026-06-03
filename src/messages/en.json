@@ -13,7 +13,7 @@
     "login": "Login",
     "register": "Register Now",
     "logout": "Logout",
-    "language": "Arabic"
+    "language": "العربية"
   },
   "auth": {
     "loginTitle": "Login",
@@ -58,7 +58,14 @@
     "submit": "Submit",
     "cancel": "Cancel",
     "purchase": "Purchase",
-    "back": "Back"
+    "back": "Back",
+    "route": "Route",
+    "walk": "Walk",
+    "metro": "Metro",
+    "bus": "Bus",
+    "microbus": "Microbus",
+    "min": "min",
+    "h": "h"
   },
   "chatbot": {
     "title": "Wasla Assistant",
@@ -77,7 +84,18 @@
     "mapEmpty": "Interactive map will display here",
     "routeOptions": "Route Options",
     "emptyTitle": "Ready to Plan Your Journey",
-    "emptyText": "Enter your starting point and destination to find the best routes across Egypt."
+    "emptyText": "Enter your starting point and destination to find the best routes across Egypt.",
+    "steps": {
+      "walkToMetro": "Walk to nearest Metro station",
+      "metroLine1": "Take Metro Line 1 to Sadat",
+      "transferL2": "Transfer to Metro Line 2",
+      "metroLine2": "Take Metro Line 2 to Giza",
+      "bus381": "Take Bus #381 to destination",
+      "walkToBus": "Walk to bus stop",
+      "bus174": "Take Bus #174 to Ramses",
+      "microbus927": "Transfer to Microbus #927",
+      "walkToDest": "Walk to destination"
+    }
   },
   "stops": {
     "title": "Important Transportation Stops",
@@ -114,7 +132,25 @@
     "trialText": "First 3 searches free",
     "purchaseCredits": "Purchase Credits",
     "earnFree": "Earn Free Credits",
-    "recentActivity": "Recent Activity"
+    "recentActivity": "Recent Activity",
+    "popular": "Popular",
+    "currency": "EGP",
+    "packages": {
+      "basic": { "name": "Basic Pack" },
+      "standard": { "name": "Standard Pack", "bonus": "+5 bonus credits" },
+      "premium": { "name": "Premium Pack", "bonus": "+15 bonus credits" }
+    },
+    "tasks": {
+      "rate": "Rate a route",
+      "submit": "Submit an approved route",
+      "share": "Share the app",
+      "checkin": "Weekly check-in"
+    },
+    "activity": {
+      "search": "Route Search",
+      "chatbot": "Chatbot Query",
+      "bonus": "Welcome Bonus"
+    }
   },
   "footer": {
     "text": "Connecting all of Egypt, one route at a time."

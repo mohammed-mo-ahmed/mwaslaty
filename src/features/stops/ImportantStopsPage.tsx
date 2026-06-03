@@ -4,11 +4,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {ArrowRight, Bus, MapPin, Train} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
-import {stops} from './stopsData';
+import {useEffect, useState} from 'react';
+import {loadCSVData} from '@/shared/utils/dataLoader';
+import {Stop} from './stopsData';
 
 export function ImportantStopsPage() {
   const locale = useLocale();
   const t = useTranslations('stops');
+  const [stopsData, setStopsData] = useState<Stop[]>([]);
+
+  useEffect(() => {
+    loadCSVData<any>('/data/stops.csv').then(data => {
+      const formattedData = data.map(item => ({
+        ...item,
+        connections: typeof item.connections === 'string' ? item.connections.split(';') : item.connections,
+        facilities: typeof item.facilities === 'string' ? item.facilities.split(';') : item.facilities,
+        descriptionAr: item.descriptionAr || item.description
+      }));
+      setStopsData(formattedData);
+    });
+  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -18,7 +33,7 @@ export function ImportantStopsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {stops.map((stop) => (
+        {stopsData.map((stop) => (
           <Link key={stop.id} href={`/${locale}/stops/${stop.id}`} className="group overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-100 transition hover:-translate-y-1 hover:shadow-md">
             <div className="relative h-48">
               <Image src={stop.imageUrl} alt={stop.name} fill className="object-cover transition group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
@@ -29,7 +44,9 @@ export function ImportantStopsPage() {
               {stop.isMetroStation ? <Train className="absolute right-4 top-4 h-7 w-7 rounded bg-blue-600 p-1 text-white" /> : null}
             </div>
             <div className="p-5">
-              <p className="text-sm leading-6 text-gray-600">{stop.description}</p>
+              <p className="text-sm leading-6 text-gray-600">
+                {locale === 'ar' ? (stop as any).descriptionAr : stop.description}
+              </p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="flex items-center text-sm font-medium text-amber-700"><Bus className="me-1 h-4 w-4" />{stop.routes} {t('routes')}</span>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-amber-700" />
