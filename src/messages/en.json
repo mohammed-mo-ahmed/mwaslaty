@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "title": "Wasla - Easy Transportation in Egypt",
+    "description": "Your comprehensive guide to transportation across Egypt."
+  },
+  "navigation": {
+    "home": "Home",
+    "chatbot": "Chatbot",
+    "search": "Search",
+    "importantStops": "Important Stops",
+    "userRoutes": "User Routes",
+    "credits": "Credits",
+    "login": "Login",
+    "register": "Register Now",
+    "logout": "Logout",
+    "language": "Arabic"
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "signupTitle": "Create an account",
+    "email": "Email",
+    "name": "Name",
+    "password": "Password",
+    "submitLogin": "Login",
+    "submitSignup": "Register Now",
+    "noAccount": "Need an account?",
+    "hasAccount": "Already have an account?",
+    "serviceRequiredTitle": "Login required",
+    "serviceRequiredText": "You can browse this page freely. Login or create an account to use this service.",
+    "loginToContinue": "Login to continue"
+  },
+  "home": {
+    "headline": "Navigate Egypt with Ease",
+    "description": "Plan public transportation routes across Egypt using metro, buses, microbuses, and community knowledge in one focused platform.",
+    "registerNow": "Register Now",
+    "exploreStops": "Explore Stops",
+    "aiChatBot": "AI Chatbot",
+    "aiChatBotDesc": "Ask natural-language route questions and get step-by-step guidance.",
+    "manualSearch": "Manual Search",
+    "manualSearchDesc": "Search routes manually with estimated cost, time, and transport modes.",
+    "importantStopsDesc": "Explore major transport hubs such as Ramses, Tahrir, Aboud, and El-Monib.",
+    "communityRoutes": "Community Routes",
+    "communityRoutesDesc": "Submit routes, vote on accuracy, and improve the network.",
+    "transportationNetwork": "Transportation Network",
+    "metroLines": "Metro Lines",
+    "busRoutes": "Bus Routes",
+    "microbusLines": "Microbus Lines",
+    "majorStops": "Major Stops"
+  },
+  "common": {
+    "from": "From",
+    "to": "To",
+    "searching": "Searching...",
+    "findRoutes": "Find Routes",
+    "duration": "Duration",
+    "cost": "Cost",
+    "distance": "Distance",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "purchase": "Purchase",
+    "back": "Back"
+  },
+  "chatbot": {
+    "title": "Wasla Assistant",
+    "subtitle": "Ask anything about getting around Egypt.",
+    "placeholder": "Ask about routes, e.g. From Maadi to New Cairo",
+    "hint": "Try asking: From Heliopolis to Downtown or Best route to Cairo Airport",
+    "intro": "Ask me anything about getting around Egypt.",
+    "response": "I found route options for your trip:"
+  },
+  "search": {
+    "title": "Route Planner",
+    "subtitle": "Plan your journey across Egypt with step-by-step directions.",
+    "originPlaceholder": "Enter starting location",
+    "destinationPlaceholder": "Enter destination",
+    "mapTitle": "Route Map",
+    "mapEmpty": "Interactive map will display here",
+    "routeOptions": "Route Options",
+    "emptyTitle": "Ready to Plan Your Journey",
+    "emptyText": "Enter your starting point and destination to find the best routes across Egypt."
+  },
+  "stops": {
+    "title": "Important Transportation Stops",
+    "subtitle": "Explore Egypt's major transportation hubs with route information and connections.",
+    "routes": "Routes",
+    "types": "Transportation Types",
+    "notFoundTitle": "Can't Find Your Stop?",
+    "notFoundText": "Help improve the network by adding missing stops or routes.",
+    "addRoute": "Add New Route",
+    "backToStops": "Back to All Stops",
+    "routesSchedules": "Routes & Schedules",
+    "stationInfo": "Station Info",
+    "aboutStop": "About This Stop",
+    "facilities": "Facilities",
+    "gettingHere": "Getting Here",
+    "gettingHereText": "This stop is accessible via multiple transportation modes. Check routes for available connections."
+  },
+  "userRoutes": {
+    "title": "Community Routes",
+    "subtitle": "Help improve Egypt's transportation network by sharing routes and voting on submissions.",
+    "addRoute": "Add Route",
+    "addNewRoute": "Add New Route",
+    "routeName": "Route Name",
+    "type": "Type",
+    "fare": "Fare",
+    "submittedBy": "Submitted by"
+  },
+  "credits": {
+    "title": "Credits & Billing",
+    "subtitle": "Manage usage and purchase credits for route services.",
+    "currentBalance": "Current Balance",
+    "credits": "Credits",
+    "trial": "Free Trial",
+    "trialText": "First 3 searches free",
+    "purchaseCredits": "Purchase Credits",
+    "earnFree": "Earn Free Credits",
+    "recentActivity": "Recent Activity"
+  },
+  "footer": {
+    "text": "Connecting all of Egypt, one route at a time."
+  }
+}

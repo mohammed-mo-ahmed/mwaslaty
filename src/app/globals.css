@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: #fffbeb;
+  color: #111827;
+}
+
+[dir='rtl'] {
+  font-family: Cairo, "Segoe UI", Tahoma, Arial, sans-serif;
+}

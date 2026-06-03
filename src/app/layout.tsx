@@ -1,0 +1,18 @@
+import type {Metadata} from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'Wasla - Easy Transportation in Egypt',
+  description: 'Your comprehensive guide to transportation across Egypt',
+  icons: {
+    icon: '/favicon.svg'
+  }
+};
+
+export default function RootLayout({children}: {children: React.ReactNode}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>{children}</body>
+    </html>
+  );
+}
