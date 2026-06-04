@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "Wasla - Easy Transportation in Egypt",
+    "title": "Mwaslaty - Easy Transportation in Egypt",
     "description": "Your comprehensive guide to transportation across Egypt."
   },
   "navigation": {
@@ -68,7 +68,7 @@
     "h": "h"
   },
   "chatbot": {
-    "title": "Wasla Assistant",
+    "title": "Mwaslaty Assistant",
     "subtitle": "Ask anything about getting around Egypt.",
     "placeholder": "Ask about routes, e.g. From Maadi to New Cairo",
     "hint": "Try asking: From Heliopolis to Downtown or Best route to Cairo Airport",

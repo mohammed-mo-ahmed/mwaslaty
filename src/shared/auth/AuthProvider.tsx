@@ -16,7 +16,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const storageKey = 'wasla_user';
+const storageKey = 'mwaslaty_user';
 
 export function AuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<User | null>(null);

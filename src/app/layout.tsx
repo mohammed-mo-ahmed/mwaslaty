@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Wasla - Easy Transportation in Egypt',
+  title: 'Mwaslaty - Easy Transportation in Egypt',
   description: 'Your comprehensive guide to transportation across Egypt',
   icons: {
     icon: '/favicon.svg'

@@ -1,6 +1,6 @@
-# Wasla - Navigate Egypt with Ease
+# Mwaslaty - Navigate Egypt with Ease
 
-Wasla (وصلة) is a comprehensive transportation platform that connects all of Egypt's transportation networks - metro, buses, and microbuses - into one intelligent, community-driven application.
+Mwaslaty (مواصلاتي) is a comprehensive transportation platform that connects all of Egypt's transportation networks - metro, buses, and microbuses - into one intelligent, community-driven application.
 
 ## Features
 
@@ -55,7 +55,7 @@ Explore major stops like Ramses Station, Tahrir Square, Aboud, El-Monib, and mor
 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd wasla
+cd mwaslaty
 ```
 
 2. Install dependencies
@@ -99,7 +99,7 @@ src/
 
 ## Contributing
 
-We welcome contributions to improve Wasla! Here's how you can help:
+We welcome contributions to improve Mwaslaty! Here's how you can help:
 
 1. **Route Data**: Submit accurate route information through the app
 2. **Bug Reports**: Report issues you encounter
@@ -129,4 +129,4 @@ For support, feature requests, or questions:
 
 ---
 
-**Wasla** - Connecting all of Egypt, one route at a time. 🇪🇬
+**Mwaslaty** - Connecting all of Egypt, one route at a time. 🇪🇬
