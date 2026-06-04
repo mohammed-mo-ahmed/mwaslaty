@@ -1,16 +1,16 @@
-import Papa from 'papaparse';
+import Papa, { ParseResult } from 'papaparse';
 
 export async function loadCSVData<T>(url: string): Promise<T[]> {
   const response = await fetch(url);
   const csvText = await response.text();
-  
+
   return new Promise((resolve, reject) => {
-    Papa.parse(csvText, {
+    Papa.parse<T>(csvText, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        resolve(results.data as T[]);
+      complete: (results: ParseResult<T>) => {
+        resolve(results.data);
       },
       error: (error: Error) => {
         reject(error);
