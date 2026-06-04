@@ -7,9 +7,9 @@ import {AppLayout} from '@/shared/components/AppLayout';
 
 type Props = {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 };
 
 function isLocale(locale: string): locale is Locale {
@@ -21,16 +21,22 @@ export function generateStaticParams() {
 }
 
 export default async function LocaleLayout({children, params}: Props) {
-  if (!isLocale(params.locale)) {
+  const {locale} = await params;
+
+  if (!isLocale(locale)) {
     notFound();
   }
 
   const messages = await getMessages();
-  const dir = params.locale === 'ar' ? 'rtl' : 'ltr';
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <div lang={params.locale} dir={dir} className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-sky-50">
-      <NextIntlClientProvider locale={params.locale} messages={messages}>
+    <div
+      lang={locale}
+      dir={dir}
+      className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-sky-50"
+    >
+      <NextIntlClientProvider locale={locale} messages={messages}>
         <AuthProvider>
           <AppLayout>{children}</AppLayout>
         </AuthProvider>
