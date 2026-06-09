@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json<ChatResponse>(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[chat]', message);
 
     if (message.includes('GOOGLE_GENERATIVE_AI_API_KEY')) {
       return NextResponse.json<ChatResponse>(
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json<ChatResponse>(
       {
-        text: 'عذراً، حدث خطأ أثناء معالجة طلبك. حاول مرة أخرى.'
+        text: `عذراً، حدث خطأ: ${message}`
       },
       {status: 500}
     );
