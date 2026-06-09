@@ -188,9 +188,6 @@ export function ChatbotPage() {
     <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col">
       <div className="flex items-center justify-center border-b border-gray-200/80 bg-white/60 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-sm">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
           <div>
             <h1 className="text-base font-bold text-gray-900">{t('title')}</h1>
             <p className="text-xs text-gray-500">{t('subtitle')}</p>
@@ -201,9 +198,6 @@ export function ChatbotPage() {
       <div className="flex-1 overflow-y-auto">
         {showEmptyState ? (
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-200/50">
-              <Sparkles className="h-8 w-8 text-white" />
-            </div>
             <h2 className="text-xl font-bold text-gray-900">{t('title')}</h2>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-gray-500">
               {t('intro')}
