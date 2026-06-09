@@ -11,6 +11,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   updateProfile,
   signOut,
   User,
@@ -24,6 +26,7 @@ type AuthContextValue = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -53,6 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
@@ -65,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         login,
         signup,
+        loginWithGoogle,
         logout,
       }}
     >

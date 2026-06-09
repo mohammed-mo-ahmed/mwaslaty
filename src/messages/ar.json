@@ -28,7 +28,9 @@
     "serviceRequiredTitle": "تسجيل الدخول مطلوب",
     "serviceRequiredText": "يمكنك تصفح هذه الصفحة بحرية. سجل الدخول أو أنشئ حسابًا لاستخدام هذه الخدمة.",
     "loginToContinue": "سجل الدخول للمتابعة",
-    "error": "حدث خطأ. حاول مرة أخرى."
+    "error": "حدث خطأ. حاول مرة أخرى.",
+    "orDivider": "أو سجل عبر",
+    "signInWithGoogle": "Google"
   },
   "home": {
     "headline": "تنقل في مصر بسهولة",

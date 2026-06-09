@@ -28,7 +28,9 @@
     "serviceRequiredTitle": "Login required",
     "serviceRequiredText": "You can browse this page freely. Login or create an account to use this service.",
     "loginToContinue": "Login to continue",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "orDivider": "or continue with",
+    "signInWithGoogle": "Google"
   },
   "home": {
     "headline": "Navigate Egypt with Ease",
