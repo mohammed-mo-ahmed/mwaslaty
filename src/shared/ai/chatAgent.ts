@@ -1,101 +1,128 @@
-﻿import {getModel} from './gemini';
+﻿import {generateContent} from './gemini';
+import type {GeminiContent, GeminiPart} from './gemini';
 import {functionDeclarations} from './definitions';
 import {SYSTEM_PROMPT} from './systemPrompt';
 import {searchRoutes} from './tools/routeSearch';
 import {searchPlaces} from './tools/placeSearch';
 import type {ChatHistoryItem, ChatResponse} from './types';
 
+function historyToContents(history: ChatHistoryItem[]): GeminiContent[] {
+  return history.map((h) => ({
+    role: h.role === 'user' ? 'user' as const : 'model' as const,
+    parts: [{text: h.text}]
+  }));
+}
+
 export async function processMessage(
   message: string,
   history: ChatHistoryItem[]
 ): Promise<ChatResponse> {
-  const model = getModel();
-  const chat = model.startChat({
-    systemInstruction: SYSTEM_PROMPT,
-    tools: [{functionDeclarations}],
-    history: history.map((h) => ({
-      role: h.role === "user" ? "user" : "model",
-      parts: [{text: h.text}]
-    }))
-  });
+  const contents: GeminiContent[] = [
+    ...historyToContents(history),
+    {role: 'user', parts: [{text: message}]}
+  ];
 
-  let result = await chat.sendMessage(message);
-  let responseText = "";
   let routes;
   let places;
 
   for (let round = 0; round < 3; round++) {
-    const candidate = result.response.candidates?.[0];
-    const part = candidate?.content?.parts?.[0];
+    const response = await generateContent({
+      systemInstruction: SYSTEM_PROMPT,
+      contents,
+      tools: [{function_declarations: functionDeclarations}]
+    });
 
-    if (!part) {
-      responseText = result.response.text();
-      break;
+    const candidate = response.candidates?.[0];
+    if (!candidate) {
+      return {text: 'عذراً، لم أتمكن من معالجة طلبك.'};
     }
 
-    if (part.functionCall) {
-      const fnCall = part.functionCall;
+    if (candidate.finishReason === 'SAFETY') {
+      return {text: 'عذراً، تعذر معالجة هذا الطلب بسبب قيود الأمان. يرجى إعادة صياغة سؤالك.'};
+    }
+
+    const parts = candidate.content?.parts;
+    if (!parts?.length) {
+      return {text: 'عذراً، لم أتمكن من معالجة طلبك.'};
+    }
+
+    const firstPart = parts[0];
+
+    if ('functionCall' in firstPart && firstPart.functionCall) {
+      const fnCall = firstPart.functionCall;
       const fnArgs = fnCall.args as Record<string, string | undefined>;
 
-      if (fnCall.name === "searchRoutes") {
-        const origin = fnArgs.origin ?? "";
-        const destination = fnArgs.destination ?? "";
+      contents.push({
+        role: 'model',
+        parts: [{functionCall: {name: fnCall.name, args: fnCall.args}}]
+      });
+
+      if (fnCall.name === 'searchRoutes') {
+        const origin = fnArgs.origin ?? '';
+        const destination = fnArgs.destination ?? '';
         const toolResult = await searchRoutes(origin, destination);
         routes = toolResult.routes;
 
-        result = await chat.sendMessage([
-          {
-            functionResponse: {
-              name: "searchRoutes",
-              response: {
-                text: toolResult.text,
-                routes: toolResult.routes,
-                duration: toolResult.routes[0]?.duration,
-                cost: toolResult.routes[0]?.cost,
-                transfers: toolResult.routes[0]?.transfers
+        contents.push({
+          role: 'function',
+          parts: [
+            {
+              functionResponse: {
+                name: 'searchRoutes',
+                response: {
+                  text: toolResult.text,
+                  routes: toolResult.routes,
+                  duration: toolResult.routes[0]?.duration,
+                  cost: toolResult.routes[0]?.cost,
+                  transfers: toolResult.routes[0]?.transfers
+                }
               }
             }
-          }
-        ]);
-      } else if (fnCall.name === "searchPlaces") {
-        const query = fnArgs.query ?? "";
+          ]
+        });
+      } else if (fnCall.name === 'searchPlaces') {
+        const query = fnArgs.query ?? '';
         const location = fnArgs.location;
         const toolResult = await searchPlaces(query, location);
         places = toolResult.places;
 
-        result = await chat.sendMessage([
-          {
-            functionResponse: {
-              name: "searchPlaces",
-              response: {
-                text: toolResult.text,
-                places: toolResult.places
+        contents.push({
+          role: 'function',
+          parts: [
+            {
+              functionResponse: {
+                name: 'searchPlaces',
+                response: {
+                  text: toolResult.text,
+                  places: toolResult.places
+                }
               }
             }
-          }
-        ]);
+          ]
+        });
       } else {
-        result = await chat.sendMessage([
-          {
-            functionResponse: {
-              name: fnCall.name,
-              response: {error: "Unknown function: " + fnCall.name}
+        contents.push({
+          role: 'function',
+          parts: [
+            {
+              functionResponse: {
+                name: fnCall.name,
+                response: {error: `Unknown function: ${fnCall.name}`}
+              }
             }
-          }
-        ]);
+          ]
+        });
       }
-    } else if (part.text) {
-      responseText = part.text;
-      break;
-    } else {
-      responseText = result.response.text();
-      break;
+
+      continue;
     }
+
+    if ('text' in firstPart && firstPart.text) {
+      return {text: firstPart.text, routes, places};
+    }
+
+    return {text: 'عذراً، حدث خطأ أثناء معالجة طلبك.', routes, places};
   }
 
-  if (!responseText) {
-    responseText = result.response.text();
-  }
-
-  return {text: responseText, routes, places};
+  return {text: 'عذراً، استغرق الطلب وقتاً طويلاً. حاول مرة أخرى.', routes, places};
 }
