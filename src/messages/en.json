@@ -76,8 +76,14 @@
     "subtitle": "Ask anything about getting around Egypt.",
     "placeholder": "Ask about routes, e.g. From Maadi to New Cairo",
     "hint": "Try asking: From Heliopolis to Downtown or Best route to Cairo Airport",
-    "intro": "Ask me anything about getting around Egypt.",
-    "response": "I found route options for your trip:"
+    "intro": "Hello! I'm Mwaslaty AI, your transportation assistant. Ask me about routes anywhere in Egypt, and I'll help you find the best way to get there.",
+    "response": "I found route options for your trip:",
+    "typing": "typing",
+    "routeOption": "Route Option",
+    "steps": "Steps",
+    "transfers": "Transfers",
+    "fastest": "Fastest",
+    "cheapest": "Cheapest"
   },
   "search": {
     "title": "Route Planner",
