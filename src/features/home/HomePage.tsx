@@ -56,10 +56,11 @@ export function HomePage() {
               <ArrowRight className="ms-2 h-5 w-5" />
             </Link>
             <Link
-              href={`/${locale}/stops`}
+              href={`/${locale}/chatbot`}
               className="inline-flex items-center justify-center rounded-md border border-amber-600 px-6 py-3 font-semibold text-amber-700 hover:bg-amber-50"
             >
-              {t('exploreStops')}
+              <MessageCircle className="me-2 h-5 w-5" />
+              {t('chatWithAI')}
             </Link>
           </div>
         </div>

@@ -34,6 +34,7 @@
     "description": "Plan public transportation routes across Egypt using metro, buses, microbuses, and community knowledge in one focused platform.",
     "registerNow": "Register Now",
     "exploreStops": "Explore Stops",
+    "chatWithAI": "Chat with Mwaslaty AI",
     "aiChatBot": "AI Chatbot",
     "aiChatBotDesc": "Ask natural-language route questions and get step-by-step guidance.",
     "manualSearch": "Manual Search",
@@ -121,7 +122,12 @@
     "routeName": "Route Name",
     "type": "Type",
     "fare": "Fare",
-    "submittedBy": "Submitted by"
+    "submittedBy": "Submitted by",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
   },
   "credits": {
     "title": "Credits & Billing",

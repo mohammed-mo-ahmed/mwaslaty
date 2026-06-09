@@ -24,19 +24,24 @@ const sampleRoutes = [
       'Transfer to Metro Line 2 toward Giza (15 min)',
       'Take Microbus #927 to 6th October (45 min)'
     ],
-    modes: ['Walk', 'Metro', 'Microbus']
+    modes: ['walk', 'metro', 'microbus']
   },
   {
     id: '2',
     duration: '2h 15m',
     cost: '12 EGP',
-    steps: ['Walk to Nasr City Bus Stop (8 min)', 'Take Bus #174 to Ramses (35 min)', 'Transfer to Bus #381 toward 6th October (1h 20m)'],
-    modes: ['Walk', 'Bus']
+    steps: [
+      'Walk to Nasr City Bus Stop (8 min)',
+      'Take Bus #174 to Ramses (35 min)',
+      'Transfer to Bus #381 toward 6th October (1h 20m)'
+    ],
+    modes: ['walk', 'bus']
   }
 ];
 
 export function ChatbotPage() {
   const t = useTranslations('chatbot');
+  const tCommon = useTranslations('common');
   const {isAuthenticated} = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {id: '1', text: t('intro'), isUser: false, timestamp: new Date()}
@@ -47,11 +52,17 @@ export function ChatbotPage() {
 
   const handleSendMessage = () => {
     if (!isAuthenticated || !inputMessage.trim()) return;
-    setMessages((current) => [...current, {id: Date.now().toString(), text: inputMessage, isUser: true, timestamp: new Date()}]);
+    setMessages((current) => [
+      ...current,
+      {id: Date.now().toString(), text: inputMessage, isUser: true, timestamp: new Date()}
+    ]);
     setInputMessage('');
     setIsLoading(true);
     window.setTimeout(() => {
-      setMessages((current) => [...current, {id: `${Date.now()}-bot`, text: t('response'), isUser: false, timestamp: new Date()}]);
+      setMessages((current) => [
+        ...current,
+        {id: `${Date.now()}-bot`, text: t('response'), isUser: false, timestamp: new Date()}
+      ]);
       setIsLoading(false);
     }, 700);
   };
@@ -70,10 +81,19 @@ export function ChatbotPage() {
         <div className="h-96 overflow-y-auto p-6">
           <div className="space-y-4">
             {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-md rounded-lg px-4 py-3 ${message.isUser ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+              <div
+                key={message.id}
+                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-md rounded-lg px-4 py-3 ${
+                    message.isUser ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
+                  }`}
+                >
                   <p className="text-sm">{message.text}</p>
-                  <p className="mt-1 text-xs opacity-70">{message.timestamp.toLocaleTimeString()}</p>
+                  <p className="mt-1 text-xs opacity-70">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))}
@@ -81,22 +101,38 @@ export function ChatbotPage() {
             {hasRouteResponse ? (
               <div className="space-y-4">
                 {sampleRoutes.map((route) => (
-                  <div key={route.id} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div
+                    key={route.id}
+                    className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+                  >
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span className="flex items-center"><Clock className="me-1 h-4 w-4" />{route.duration}</span>
-                        <span className="flex items-center"><DollarSign className="me-1 h-4 w-4" />{route.cost}</span>
+                        <span className="flex items-center">
+                          <Clock className="me-1 h-4 w-4" />
+                          {route.duration}
+                        </span>
+                        <span className="flex items-center">
+                          <DollarSign className="me-1 h-4 w-4" />
+                          {route.cost}
+                        </span>
                       </div>
                       <div className="flex gap-1">
                         {route.modes.map((mode) => (
-                          <span key={mode} className="rounded-full bg-amber-200 px-2 py-1 text-xs text-amber-900">{mode}</span>
+                          <span
+                            key={mode}
+                            className="rounded-full bg-amber-200 px-2 py-1 text-xs text-amber-900"
+                          >
+                            {tCommon(mode)}
+                          </span>
                         ))}
                       </div>
                     </div>
                     <div className="space-y-2">
                       {route.steps.map((step, index) => (
                         <div key={step} className="flex items-start gap-3">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs text-white">{index + 1}</span>
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                            {index + 1}
+                          </span>
                           <p className="text-sm text-gray-700">{step}</p>
                         </div>
                       ))}
@@ -106,7 +142,9 @@ export function ChatbotPage() {
               </div>
             ) : null}
 
-            {isLoading ? <div className="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-600">...</div> : null}
+            {isLoading ? (
+              <div className="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-600">...</div>
+            ) : null}
           </div>
         </div>
 
@@ -116,15 +154,20 @@ export function ChatbotPage() {
               <input
                 type="text"
                 value={inputMessage}
-                onChange={(event) => setInputMessage(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') handleSendMessage();
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSendMessage();
                 }}
                 placeholder={t('placeholder')}
                 disabled={isLoading}
                 className="flex-1 rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
-              <button type="button" onClick={handleSendMessage} disabled={isLoading || !inputMessage.trim()} className="rounded-md bg-blue-600 px-5 py-2 text-white hover:bg-blue-700 disabled:opacity-50">
+              <button
+                type="button"
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputMessage.trim()}
+                className="rounded-md bg-blue-600 px-5 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
                 <Send className="h-4 w-4" />
               </button>
             </div>

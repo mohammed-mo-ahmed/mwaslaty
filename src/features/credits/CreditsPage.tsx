@@ -4,12 +4,6 @@ import {Check, Coins, CreditCard, Gift, Star} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 
-const packages = [
-  {id: 'basic', name: 'Basic Pack', credits: 20, price: 10},
-  {id: 'standard', name: 'Standard Pack', credits: 50, price: 20, popular: true, bonus: '+5 bonus credits'},
-  {id: 'premium', name: 'Premium Pack', credits: 100, price: 35, bonus: '+15 bonus credits'}
-];
-
 export function CreditsPage() {
   const t = useTranslations('credits');
   const common = useTranslations('common');
@@ -23,11 +17,27 @@ export function CreditsPage() {
   );
 }
 
-function CreditsContent({t, common}: {t: any; common: any}) {
+type TranslationFn = ReturnType<typeof useTranslations>;
+
+function CreditsContent({t, common}: {t: TranslationFn; common: TranslationFn}) {
   const packages = [
-    {id: 'basic', name: t('packages.basic.name'), credits: 20, price: 10},
-    {id: 'standard', name: t('packages.standard.name'), credits: 50, price: 20, popular: true, bonus: t('packages.standard.bonus')},
-    {id: 'premium', name: t('packages.premium.name'), credits: 100, price: 35, bonus: t('packages.premium.bonus')}
+    {id: 'basic', name: t('packages.basic.name'), credits: 20, price: 10, popular: false, bonus: null},
+    {
+      id: 'standard',
+      name: t('packages.standard.name'),
+      credits: 50,
+      price: 20,
+      popular: true,
+      bonus: t('packages.standard.bonus')
+    },
+    {
+      id: 'premium',
+      name: t('packages.premium.name'),
+      credits: 100,
+      price: 35,
+      popular: false,
+      bonus: t('packages.premium.bonus')
+    }
   ];
 
   return (
@@ -58,7 +68,12 @@ function CreditsContent({t, common}: {t: any; common: any}) {
         <h2 className="mb-5 text-2xl font-bold text-gray-950">{t('purchaseCredits')}</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {packages.map((pkg) => (
-            <div key={pkg.id} className={`relative rounded-lg bg-white p-6 text-center shadow-sm ring-1 ring-gray-100 ${pkg.popular ? 'ring-2 ring-amber-500' : ''}`}>
+            <div
+              key={pkg.id}
+              className={`relative rounded-lg bg-white p-6 text-center shadow-sm ring-1 ring-gray-100 ${
+                pkg.popular ? 'ring-2 ring-amber-500' : ''
+              }`}
+            >
               {pkg.popular ? (
                 <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white">
                   <Star className="me-1 h-3 w-3" />
@@ -68,9 +83,18 @@ function CreditsContent({t, common}: {t: any; common: any}) {
               <h3 className="text-xl font-bold text-gray-950">{pkg.name}</h3>
               <div className="mt-3 text-3xl font-bold text-amber-600">{pkg.credits}</div>
               <p className="text-gray-600">{t('credits')}</p>
-              {pkg.bonus ? <p className="mx-auto mt-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-700">{pkg.bonus}</p> : null}
-              <div className="my-6 text-2xl font-bold text-gray-950">{pkg.price} {t('currency')}</div>
-              <button type="button" className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700">
+              {pkg.bonus ? (
+                <p className="mx-auto mt-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-700">
+                  {pkg.bonus}
+                </p>
+              ) : null}
+              <div className="my-6 text-2xl font-bold text-gray-950">
+                {pkg.price} {t('currency')}
+              </div>
+              <button
+                type="button"
+                className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
+              >
                 <CreditCard className="me-2 h-4 w-4" />
                 {common('purchase')}
               </button>
@@ -81,32 +105,48 @@ function CreditsContent({t, common}: {t: any; common: any}) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
-          <h2 className="mb-4 flex items-center text-xl font-bold text-gray-950"><Gift className="me-2 h-5 w-5 text-emerald-600" />{t('earnFree')}</h2>
-          {[
-            {key: 'rate', value: 1},
-            {key: 'submit', value: 1},
-            {key: 'share', value: 1},
-            {key: 'checkin', value: 1}
-          ].map((item) => (
-            <div key={item.key} className="mb-3 flex items-center justify-between rounded-md bg-emerald-50 p-3">
-              <span>{t(`tasks.${item.key}`)}</span>
-              <span className="flex items-center font-semibold text-emerald-700"><Check className="me-1 h-4 w-4" />{item.value} {t('credits')}</span>
+          <h2 className="mb-4 flex items-center text-xl font-bold text-gray-950">
+            <Gift className="me-2 h-5 w-5 text-emerald-600" />
+            {t('earnFree')}
+          </h2>
+          {(['rate', 'submit', 'share', 'checkin'] as const).map((key) => (
+            <div
+              key={key}
+              className="mb-3 flex items-center justify-between rounded-md bg-emerald-50 p-3"
+            >
+              <span>{t(`tasks.${key}`)}</span>
+              <span className="flex items-center font-semibold text-emerald-700">
+                <Check className="me-1 h-4 w-4" />1 {t('credits')}
+              </span>
             </div>
           ))}
         </div>
         <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
           <h2 className="mb-4 text-xl font-bold text-gray-950">{t('recentActivity')}</h2>
-          {[
-            {key: 'search', amount: '-1', date: '2024-12-22'},
-            {key: 'chatbot', amount: '-1', date: '2024-12-21'},
-            {key: 'bonus', amount: '+5', date: '2024-12-20'}
-          ].map((item) => (
-            <div key={`${item.key}-${item.date}`} className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0">
+          {(
+            [
+              {key: 'search', amount: '-1', date: '2024-12-22'},
+              {key: 'chatbot', amount: '-1', date: '2024-12-21'},
+              {key: 'bonus', amount: '+5', date: '2024-12-20'}
+            ] as const
+          ).map((item) => (
+            <div
+              key={`${item.key}-${item.date}`}
+              className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
+            >
               <div>
                 <p className="text-gray-800">{t(`activity.${item.key}`)}</p>
                 <p className="text-sm text-gray-500">{item.date}</p>
               </div>
-              <span className={item.amount.startsWith('+') ? 'font-semibold text-emerald-700' : 'font-semibold text-red-700'}>{item.amount}</span>
+              <span
+                className={
+                  item.amount.startsWith('+')
+                    ? 'font-semibold text-emerald-700'
+                    : 'font-semibold text-red-700'
+                }
+              >
+                {item.amount}
+              </span>
             </div>
           ))}
         </div>
