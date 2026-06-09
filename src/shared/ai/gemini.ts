@@ -1,5 +1,5 @@
 ﻿const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const MODEL = 'gemini-2.0-flash';
+const MODELS = ['gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'];
 
 export type GeminiPart =
   | {text: string}
@@ -36,6 +36,38 @@ type GeminiRequest = {
   }>;
 };
 
+async function tryModel(
+  model: string,
+  body: GeminiRequest,
+  apiKey: string
+): Promise<{response: GeminiResponse} | {retryAfter: number}> {
+  const url = `${API_BASE}/models/${model}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+
+  if (res.ok) {
+    return {response: (await res.json()) as GeminiResponse};
+  }
+
+  const text = await res.text();
+
+  if (res.status === 429) {
+    const retryMatch = text.match(/retry in (\d+(?:\.\d+)?)s/);
+    const retryAfter = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 10;
+    return {retryAfter};
+  }
+
+  if (res.status === 503 || res.status === 500) {
+    return {retryAfter: 5};
+  }
+
+  throw new Error(`Gemini API error (${res.status}): ${text}`);
+}
+
 export async function generateContent(params: {
   systemInstruction?: string;
   contents: GeminiContent[];
@@ -50,8 +82,6 @@ export async function generateContent(params: {
     );
   }
 
-  const url = `${API_BASE}/models/${MODEL}:generateContent?key=${apiKey}`;
-
   const body: GeminiRequest = {contents: params.contents};
 
   if (params.systemInstruction) {
@@ -62,16 +92,21 @@ export async function generateContent(params: {
     body.tools = params.tools;
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body)
-  });
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await tryModel(model, body, apiKey);
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Gemini API error (${res.status}): ${text}`);
+      if ('response' in result) {
+        return result.response;
+      }
+
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, result.retryAfter * 1000));
+      }
+    }
   }
 
-  return res.json() as Promise<GeminiResponse>;
+  throw new Error(
+    'All Gemini models are currently rate-limited or unavailable. Please try again later.'
+  );
 }
