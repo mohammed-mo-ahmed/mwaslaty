@@ -202,27 +202,7 @@ export function ChatbotPage() {
             <p className="mt-2 max-w-md text-sm leading-relaxed text-gray-500">
               {t('intro')}
             </p>
-            <div className="mt-8 grid w-full max-w-md grid-cols-1 gap-3 sm:grid-cols-2">
-              {[
-                'From Maadi to New Cairo',
-                'Best route to Cairo Airport',
-                'From Heliopolis to Downtown',
-                'Metro from Giza to Ramses'
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => {
-                    setInputValue(suggestion);
-                    textareaRef.current?.focus();
-                  }}
-                  className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-xs text-gray-600 shadow-sm transition hover:border-amber-300 hover:shadow-md"
-                >
-                  <MapPin className="me-1.5 inline h-3.5 w-3.5 text-amber-500" />
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            
           </div>
         ) : (
           <div className="mx-auto max-w-3xl px-6 py-6">
@@ -266,14 +246,6 @@ export function ChatbotPage() {
                 disabled={isLoading}
                 className="max-h-40 flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
               />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={isLoading || !inputValue.trim()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-40"
-              >
-                <Send className="h-4 w-4" />
-              </button>
             </div>
           </ServiceGate>
         </div>
