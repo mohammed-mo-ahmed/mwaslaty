@@ -185,7 +185,7 @@ export function ChatbotPage() {
   const showEmptyState = messages.length <= 1 && !isLoading;
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col">
+    <div className="mx-auto flex max-w-5xl flex-1 flex-col overflow-hidden" style={{height: 'calc(100dvh - 4rem)'}}>
       <div className="flex items-center justify-center border-b border-gray-200/80 bg-white/60 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div>
@@ -202,7 +202,6 @@ export function ChatbotPage() {
             <p className="mt-2 max-w-md text-sm leading-relaxed text-gray-500">
               {t('intro')}
             </p>
-            
           </div>
         ) : (
           <div className="mx-auto max-w-3xl px-6 py-6">
@@ -246,6 +245,14 @@ export function ChatbotPage() {
                 disabled={isLoading}
                 className="max-h-40 flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
               />
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={isLoading || !inputValue.trim()}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" />
+              </button>
             </div>
           </ServiceGate>
         </div>
