@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {usePathname, useRouter} from 'next/navigation';
 import {Coins, Languages, LogOut, MapPin, Menu, MessageCircle, Search, User, Users, X} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
 import {useState} from 'react';
+import {usePathname} from 'next/navigation';
 import {useAuth} from '@/shared/auth/AuthProvider';
 
 type NavItem = {
@@ -18,7 +18,6 @@ export function AppLayout({children}: {children: React.ReactNode}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const locale = useLocale();
   const pathname = usePathname() ?? `/${locale}`;
-  const router = useRouter();
   const t = useTranslations('navigation');
   const footer = useTranslations('footer');
   const {isAuthenticated, logout, user} = useAuth();
@@ -34,11 +33,18 @@ export function AppLayout({children}: {children: React.ReactNode}) {
 
   const localizePath = (href: string) => `/${locale}${href === '/' ? '' : href}`;
 
+  /**
+   * Locale switching requires a full page reload so the Server Component layout
+   * re-runs `getMessages()` and `NextIntlClientProvider` receives fresh translations.
+   * A soft navigation (router.push) reuses the client-side component tree and
+   * leaves the old messages in place even though the URL changes.
+   */
   const switchLanguage = () => {
     const nextLocale = locale === 'ar' ? 'en' : 'ar';
     const segments = pathname.split('/');
     segments[1] = nextLocale;
-    router.push(segments.join('/') || `/${nextLocale}`);
+    const nextPath = segments.join('/') || `/${nextLocale}`;
+    window.location.href = nextPath;
   };
 
   const isActive = (href: string) => {
@@ -98,7 +104,9 @@ export function AppLayout({children}: {children: React.ReactNode}) {
 
             {isAuthenticated ? (
               <>
-                <span className="rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700">{user?.name}</span>
+                <span className="rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700">
+                  {user?.name}
+                </span>
                 <button
                   type="button"
                   onClick={logout}
@@ -110,10 +118,16 @@ export function AppLayout({children}: {children: React.ReactNode}) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href={localizePath('/login')} className="rounded-md px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                <Link
+                  href={localizePath('/login')}
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                >
                   {t('login')}
                 </Link>
-                <Link href={localizePath('/signup')} className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                <Link
+                  href={localizePath('/signup')}
+                  className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
                   <User className="h-4 w-4" />
                   {t('register')}
                 </Link>
@@ -144,15 +158,27 @@ export function AppLayout({children}: {children: React.ReactNode}) {
                 {t('language')}
               </button>
               {isAuthenticated ? (
-                <button type="button" onClick={logout} className="rounded-md px-3 py-2 text-start text-sm font-semibold text-red-600 hover:bg-red-50">
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded-md px-3 py-2 text-start text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
                   {t('logout')}
                 </button>
               ) : (
                 <>
-                  <Link href={localizePath('/login')} onClick={() => setIsMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                  <Link
+                    href={localizePath('/login')}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="rounded-md px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                  >
                     {t('login')}
                   </Link>
-                  <Link href={localizePath('/signup')} onClick={() => setIsMenuOpen(false)} className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                  <Link
+                    href={localizePath('/signup')}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
                     {t('register')}
                   </Link>
                 </>
