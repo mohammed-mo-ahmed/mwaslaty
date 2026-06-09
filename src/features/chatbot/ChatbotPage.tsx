@@ -1,25 +1,11 @@
-'use client';
+﻿'use client';
 
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {ArrowRight, Clock, DollarSign, MapPin, Send, Sparkles} from 'lucide-react';
+import {Clock, DollarSign, MapPin, Send, Star} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
-
-type RouteStep = {
-  instruction: string;
-  duration: string;
-  icon?: string;
-};
-
-type RouteOption = {
-  id: string;
-  duration: string;
-  cost: string;
-  transfers: number;
-  steps: RouteStep[];
-  modes: string[];
-};
+import type {RouteOption, PlaceResult} from '@/shared/ai/types';
 
 type Message = {
   id: string;
@@ -27,35 +13,8 @@ type Message = {
   isUser: boolean;
   timestamp: Date;
   routes?: RouteOption[];
+  places?: PlaceResult[];
 };
-
-const sampleRoutes: RouteOption[] = [
-  {
-    id: '1',
-    duration: '1h 45m',
-    cost: '15 EGP',
-    transfers: 2,
-    modes: ['walk', 'metro', 'microbus'],
-    steps: [
-      {instruction: 'Walk to Nasr City Metro Station', duration: '5 min', icon: 'walk'},
-      {instruction: 'Take Metro Line 3 to Attaba', duration: '25 min', icon: 'metro'},
-      {instruction: 'Transfer to Metro Line 2 toward Giza', duration: '5 min', icon: 'transfer'},
-      {instruction: 'Take Microbus #927 to 6th October', duration: '45 min', icon: 'microbus'}
-    ]
-  },
-  {
-    id: '2',
-    duration: '2h 15m',
-    cost: '12 EGP',
-    transfers: 1,
-    modes: ['walk', 'bus'],
-    steps: [
-      {instruction: 'Walk to Nasr City Bus Stop', duration: '8 min', icon: 'walk'},
-      {instruction: 'Take Bus #174 to Ramses', duration: '35 min', icon: 'bus'},
-      {instruction: 'Transfer to Bus #381 toward 6th October', duration: '1h 20m', icon: 'transfer'}
-    ]
-  }
-];
 
 function TypingIndicator() {
   return (
@@ -120,6 +79,29 @@ function RouteCard({route, t, tCommon}: {route: RouteOption; t: ReturnType<typeo
   );
 }
 
+function PlaceCard({place}: {place: PlaceResult}) {
+  return (
+    <div className="animate-fade-in-up my-2 flex items-start gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+        <MapPin className="h-4 w-4 text-emerald-600" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-gray-900">{place.name}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          {place.rating ? (
+            <span className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {place.rating}
+            </span>
+          ) : null}
+          {place.distance ? <span>{place.distance}</span> : null}
+          {place.address ? <span className="truncate">{place.address}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ChatbotPage() {
   const t = useTranslations('chatbot');
   const tCommon = useTranslations('common');
@@ -147,7 +129,7 @@ export function ChatbotPage() {
     }
   }, [inputValue]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const text = inputValue.trim();
     if (!isAuthenticated || !text || isLoading) return;
 
@@ -158,22 +140,48 @@ export function ChatbotPage() {
       timestamp: new Date()
     };
 
+    const history = messages.map((msg) => ({
+      role: msg.isUser ? 'user' as const : 'assistant' as const,
+      text: msg.text,
+      routes: msg.routes,
+      places: msg.places
+    }));
+
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, history})
+      });
+
+      const data = await res.json();
+
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: t('response'),
+        text: data.text || 'عذراً، حدث خطأ. حاول مرة أخرى.',
         isUser: false,
         timestamp: new Date(),
-        routes: sampleRoutes
+        routes: data.routes,
+        places: data.places
       };
+
       setMessages((prev) => [...prev, botMsg]);
+    } catch {
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'عذراً، حدث خطأ في الاتصال. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsLoading(false);
-    }, 1200);
-  }, [inputValue, isAuthenticated, isLoading, t]);
+    }
+  }, [inputValue, isAuthenticated, isLoading, messages, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -186,14 +194,6 @@ export function ChatbotPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-1 flex-col overflow-hidden" style={{height: 'calc(100dvh - 4rem)'}}>
-      <div className="flex items-center justify-center border-b border-gray-200/80 bg-white/60 px-6 py-4 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-base font-bold text-gray-900">{t('title')}</h1>
-            <p className="text-xs text-gray-500">{t('subtitle')}</p>
-          </div>
-        </div>
-      </div>
 
       <div className="flex-1 overflow-y-auto">
         {showEmptyState ? (
@@ -219,6 +219,9 @@ export function ChatbotPage() {
                       <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{msg.text}</p>
                       {msg.routes?.map((route) => (
                         <RouteCard key={route.id} route={route} t={t} tCommon={tCommon} />
+                      ))}
+                      {msg.places?.map((place) => (
+                        <PlaceCard key={place.id} place={place} />
                       ))}
                     </div>
                   </div>
