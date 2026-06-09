@@ -10,10 +10,11 @@ type Props = {
 };
 
 export function ServiceGate({children}: Props) {
-  const {isAuthenticated} = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const locale = useLocale();
   const t = useTranslations('auth');
-
+  
+  if (loading) return null;
   if (isAuthenticated) {
     return <>{children}</>;
   }

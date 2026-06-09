@@ -27,7 +27,8 @@
     "hasAccount": "Already have an account?",
     "serviceRequiredTitle": "Login required",
     "serviceRequiredText": "You can browse this page freely. Login or create an account to use this service.",
-    "loginToContinue": "Login to continue"
+    "loginToContinue": "Login to continue",
+    "error": "Something went wrong. Please try again."
   },
   "home": {
     "headline": "Navigate Egypt with Ease",

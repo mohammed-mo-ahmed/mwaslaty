@@ -1,56 +1,80 @@
-'use client';
+"use client";
 
-import {createContext, useContext, useEffect, useMemo, useState} from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-type User = {
-  name: string;
-  email: string;
-};
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+  User,
+} from "firebase/auth";
+
+import { auth } from "@/shared/firebase/firebase";
 
 type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, name?: string) => void;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const storageKey = 'mwaslaty_user';
-
-export function AuthProvider({children}: {children: React.ReactNode}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = window.localStorage.getItem(storageKey);
-    if (storedUser) {
-      setUser(JSON.parse(storedUser) as User);
-    }
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+
+    return () => unsub();
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => {
-    return {
-      user,
-      isAuthenticated: Boolean(user),
-      login(email, _password, name) {
-        const nextUser = {email, name: name || email.split('@')[0] || 'User'};
-        window.localStorage.setItem(storageKey, JSON.stringify(nextUser));
-        setUser(nextUser);
-      },
-      logout() {
-        window.localStorage.removeItem(storageKey);
-        setUser(null);
-      }
-    };
-  }, [user]);
+  const login = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const signup = async (email: string, password: string, name?: string) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    if (name) {
+      await updateProfile(cred.user, { displayName: name });
+    }
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        signup,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

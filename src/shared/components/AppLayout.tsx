@@ -105,7 +105,7 @@ export function AppLayout({children}: {children: React.ReactNode}) {
             {isAuthenticated ? (
               <>
                 <span className="rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700">
-                  {user?.name}
+                  {user?.displayName || user?.email}
                 </span>
                 <button
                   type="button"
