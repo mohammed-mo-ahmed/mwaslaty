@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, post: { ...data, replyCount: 0 } });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to create post: ' + (error instanceof Error ? error.message : 'unknown') },
-      { status: 500 }
-    );
+    const msg = error instanceof Error ? error.message : 'unknown';
+    const stack = error instanceof Error ? error.stack : '';
+    console.error('[forum POST] error:', msg, stack);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

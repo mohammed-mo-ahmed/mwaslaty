@@ -15,7 +15,7 @@ ALTER TABLE user_points ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "user_points_select" ON user_points;
 DROP POLICY IF EXISTS "user_points_insert" ON user_points;
-DROP POLICY IF EXISTS "user_points_update" ON user_points;
+  DROP POLICY IF EXISTS "user_points_update" ON user_points;
 
 CREATE POLICY "user_points_select" ON user_points
   FOR SELECT USING (auth.jwt() ->> 'sub' = user_id);
@@ -25,6 +25,8 @@ CREATE POLICY "user_points_insert" ON user_points
 
 CREATE POLICY "user_points_update" ON user_points
   FOR UPDATE USING (auth.jwt() ->> 'sub' = user_id);
+
+GRANT SELECT, INSERT, UPDATE ON user_points TO authenticated;
 
 -- 2. points_transactions
 CREATE TABLE IF NOT EXISTS points_transactions (
@@ -47,7 +49,10 @@ CREATE POLICY "points_transactions_select" ON points_transactions
 CREATE POLICY "points_transactions_insert" ON points_transactions
   FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_points_transactions_user ON points_transactions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_points_transactions_user ON points_transactions(user_id);
+
+GRANT SELECT, INSERT ON points_transactions TO authenticated;
+GRANT USAGE ON SEQUENCE points_transactions_id_seq TO authenticated;
 
 -- 3. forum_posts
 CREATE TABLE IF NOT EXISTS forum_posts (
@@ -71,7 +76,11 @@ CREATE POLICY "forum_posts_select" ON forum_posts
 CREATE POLICY "forum_posts_insert" ON forum_posts
   FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_forum_posts_created ON forum_posts(created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_forum_posts_created ON forum_posts(created_at DESC);
+
+GRANT SELECT ON forum_posts TO anon;
+GRANT SELECT, INSERT ON forum_posts TO authenticated;
+GRANT USAGE ON SEQUENCE forum_posts_id_seq TO authenticated;
 
 -- 4. forum_replies
 CREATE TABLE IF NOT EXISTS forum_replies (
@@ -94,4 +103,8 @@ CREATE POLICY "forum_replies_select" ON forum_replies
 CREATE POLICY "forum_replies_insert" ON forum_replies
   FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_forum_replies_post ON forum_replies(post_id);
+  CREATE INDEX IF NOT EXISTS idx_forum_replies_post ON forum_replies(post_id);
+
+GRANT SELECT ON forum_replies TO anon;
+GRANT SELECT, INSERT ON forum_replies TO authenticated;
+GRANT USAGE ON SEQUENCE forum_replies_id_seq TO authenticated;

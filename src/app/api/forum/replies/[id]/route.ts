@@ -1,44 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/shared/supabase/client';
 import { verifyFirebaseToken } from '@/shared/firebase/admin';
 import { createAuthenticatedClient } from '@/shared/supabase/server-client';
-
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const supabase = getSupabase();
-    if (!supabase) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-
-    const { data: post, error: postError } = await supabase
-      .from('forum_posts')
-      .select('*')
-      .eq('id', params.id)
-      .single();
-
-    if (postError) {
-      return NextResponse.json({ error: postError.message }, { status: 404 });
-    }
-
-    const { data: replies, error: replyError } = await supabase
-      .from('forum_replies')
-      .select('*')
-      .eq('post_id', params.id)
-      .order('created_at', { ascending: true });
-
-    if (replyError) {
-      return NextResponse.json({ error: replyError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ post, replies: replies ?? [] });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to load post' },
-      { status: 500 }
-    );
-  }
-}
 
 export async function PATCH(
   request: NextRequest,
@@ -54,13 +16,13 @@ export async function PATCH(
     const supabase = createAuthenticatedClient(decoded);
 
     const { data: existing } = await supabase
-      .from('forum_posts')
+      .from('forum_replies')
       .select('user_id')
       .eq('id', params.id)
       .single();
 
     if (!existing) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Reply not found' }, { status: 404 });
     }
 
     if (existing.user_id !== decoded.uid) {
@@ -68,18 +30,13 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const updates: Record<string, string> = {};
-    if (body.title?.trim()) updates.title = body.title.trim();
-    if (body.body?.trim()) updates.body = body.body.trim();
-    updates.updated_at = new Date().toISOString();
-
-    if (!Object.keys(updates).length) {
-      return NextResponse.json({ error: 'No changes provided' }, { status: 400 });
+    if (!body.body?.trim()) {
+      return NextResponse.json({ error: 'Body is required' }, { status: 400 });
     }
 
     const { data, error } = await supabase
-      .from('forum_posts')
-      .update(updates)
+      .from('forum_replies')
+      .update({ body: body.body.trim() })
       .eq('id', params.id)
       .select()
       .single();
@@ -88,10 +45,10 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, post: data });
+    return NextResponse.json({ success: true, reply: data });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'unknown';
-    console.error('[forum PATCH post] error:', msg);
+    console.error('[forum PATCH reply] error:', msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
@@ -110,13 +67,13 @@ export async function DELETE(
     const supabase = createAuthenticatedClient(decoded);
 
     const { data: existing } = await supabase
-      .from('forum_posts')
+      .from('forum_replies')
       .select('user_id')
       .eq('id', params.id)
       .single();
 
     if (!existing) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Reply not found' }, { status: 404 });
     }
 
     if (existing.user_id !== decoded.uid) {
@@ -124,7 +81,7 @@ export async function DELETE(
     }
 
     const { error } = await supabase
-      .from('forum_posts')
+      .from('forum_replies')
       .delete()
       .eq('id', params.id);
 
@@ -135,7 +92,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'unknown';
-    console.error('[forum DELETE post] error:', msg);
+    console.error('[forum DELETE reply] error:', msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

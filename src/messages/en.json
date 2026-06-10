@@ -138,7 +138,10 @@
     "replyPlaceholder": "Write your answer or suggestion...",
     "noReplies": "No replies yet. Be the first to help!",
     "emptyTitle": "No questions yet",
-    "emptyText": "Be the first to ask a transportation question to the community!"
+    "emptyText": "Be the first to ask a transportation question to the community!",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saving": "Saving..."
   },
   "credits": {
     "title": "My Points",

@@ -1,13 +1,14 @@
 'use client';
 
 import {useCallback, useEffect, useState} from 'react';
-import {MessageSquare, Plus, Send, User, X} from 'lucide-react';
+import {MessageSquare, Pencil, Plus, Send, Trash2, User, X} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
 
 type ForumPost = {
   id: number;
+  user_id: string;
   title: string;
   body: string;
   author_name: string;
@@ -17,6 +18,7 @@ type ForumPost = {
 
 type ForumReply = {
   id: number;
+  user_id: string;
   post_id: number;
   body: string;
   author_name: string;
@@ -60,6 +62,9 @@ export function UserRoutesPage() {
   const [newPost, setNewPost] = useState({title: '', body: ''});
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editingPost, setEditingPost] = useState<{title: string; body: string} | null>(null);
+  const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
+  const [editReplyText, setEditReplyText] = useState('');
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -77,6 +82,8 @@ export function UserRoutesPage() {
   const openPost = async (post: ForumPost) => {
     setSelectedPost(post);
     setReplies([]);
+    setEditingPost(null);
+    setEditingReplyId(null);
     try {
       const res = await fetch(`/api/forum/posts/${post.id}`);
       const data = await res.json();
@@ -87,6 +94,8 @@ export function UserRoutesPage() {
   const closePost = () => {
     setSelectedPost(null);
     setReplies([]);
+    setEditingPost(null);
+    setEditingReplyId(null);
   };
 
   const handleCreatePost = async () => {
@@ -107,6 +116,51 @@ export function UserRoutesPage() {
         setPosts(prev => [data.post, ...prev]);
         setNewPost({title: '', body: ''});
         setShowAskForm(false);
+      }
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!user || !selectedPost || !editingPost || submitting) return;
+    setSubmitting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/forum/posts/${selectedPost.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editingPost),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedPost(prev => prev ? {...prev, ...data.post} : null);
+        setPosts(prev => prev.map(p => p.id === selectedPost.id ? {...p, ...data.post} : p));
+        setEditingPost(null);
+      }
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!user || !selectedPost || submitting) return;
+    if (!confirm(locale === 'ar' ? 'هل أنت متأكد من حذف هذا السؤال؟' : 'Are you sure you want to delete this question?')) return;
+    setSubmitting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/forum/posts/${selectedPost.id}`, {
+        method: 'DELETE',
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      if (res.ok) {
+        setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
+        closePost();
       }
     } catch {
     } finally {
@@ -141,7 +195,61 @@ export function UserRoutesPage() {
     }
   };
 
+  const startEditReply = (reply: ForumReply) => {
+    setEditingReplyId(reply.id);
+    setEditReplyText(reply.body);
+  };
+
+  const handleEditReply = async () => {
+    if (!user || editingReplyId === null || submitting || !editReplyText.trim()) return;
+    setSubmitting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/forum/replies/${editingReplyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({body: editReplyText}),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReplies(prev => prev.map(r => r.id === editingReplyId ? {...r, ...data.reply} : r));
+        setEditingReplyId(null);
+        setEditReplyText('');
+      }
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteReply = async (replyId: number) => {
+    if (!user || submitting) return;
+    if (!confirm(locale === 'ar' ? 'هل أنت متأكد من حذف هذا الرد؟' : 'Are you sure you want to delete this reply?')) return;
+    setSubmitting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/forum/replies/${replyId}`, {
+        method: 'DELETE',
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      if (res.ok) {
+        setReplies(prev => prev.filter(r => r.id !== replyId));
+        setPosts(prev =>
+          prev.map(p => (p.id === selectedPost?.id ? {...p, replyCount: Math.max(0, p.replyCount - 1)} : p))
+        );
+      }
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (selectedPost) {
+    const isOwner = user && selectedPost.user_id === user.uid;
+
     return (
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <button
@@ -153,15 +261,71 @@ export function UserRoutesPage() {
         </button>
 
         <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
-          <h1 className="text-2xl font-bold text-gray-950">{selectedPost.title}</h1>
-          <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <User className="h-3.5 w-3.5" />
-              {selectedPost.author_name}
-            </span>
-            <span>{timeAgo(selectedPost.created_at, locale)}</span>
-          </div>
-          <p className="mt-4 whitespace-pre-wrap text-gray-800 leading-relaxed">{selectedPost.body}</p>
+          {editingPost ? (
+            <div className="space-y-3">
+              <input
+                value={editingPost.title}
+                onChange={(e) => setEditingPost({...editingPost, title: e.target.value})}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-xl font-bold outline-none focus:border-amber-400"
+              />
+              <textarea
+                rows={5}
+                value={editingPost.body}
+                onChange={(e) => setEditingPost({...editingPost, body: e.target.value})}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-amber-400"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleEditPost}
+                  disabled={submitting || !editingPost.title.trim() || !editingPost.body.trim()}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {submitting ? t('saving') : common('submit')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingPost(null)}
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  {common('cancel')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-gray-950">{selectedPost.title}</h1>
+              <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <User className="h-3.5 w-3.5" />
+                  {selectedPost.author_name}
+                </span>
+                <span>{timeAgo(selectedPost.created_at, locale)}</span>
+                {isOwner && (
+                  <span className="ml-auto flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPost({title: selectedPost.title, body: selectedPost.body})}
+                      className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-amber-700"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      {t('edit')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeletePost}
+                      disabled={submitting}
+                      className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      {t('delete')}
+                    </button>
+                  </span>
+                )}
+              </div>
+              <p className="mt-4 whitespace-pre-wrap text-gray-800 leading-relaxed">{selectedPost.body}</p>
+            </>
+          )}
         </div>
 
         <div className="mt-6">
@@ -173,16 +337,70 @@ export function UserRoutesPage() {
             <p className="text-sm text-gray-500">{t('noReplies')}</p>
           ) : (
             <div className="space-y-3">
-              {replies.map((reply) => (
-                <div key={reply.id} className="rounded-lg bg-gray-50 p-4 ring-1 ring-gray-100">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <User className="h-3.5 w-3.5" />
-                    <span className="font-medium text-gray-700">{reply.author_name}</span>
-                    <span>{timeAgo(reply.created_at, locale)}</span>
+              {replies.map((reply) => {
+                const isReplyOwner = user && reply.user_id === user.uid;
+                const isEditing = editingReplyId === reply.id;
+
+                return (
+                  <div key={reply.id} className="rounded-lg bg-gray-50 p-4 ring-1 ring-gray-100">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="font-medium text-gray-700">{reply.author_name}</span>
+                      <span>{timeAgo(reply.created_at, locale)}</span>
+                      {isReplyOwner && !isEditing && (
+                        <span className="ml-auto flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEditReply(reply)}
+                            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 hover:text-amber-700"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            {t('edit')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReply(reply.id)}
+                            disabled={submitting}
+                            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-500 hover:bg-red-100"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {t('delete')}
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <div className="mt-2 space-y-2">
+                        <textarea
+                          rows={3}
+                          value={editReplyText}
+                          onChange={(e) => setEditReplyText(e.target.value)}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-amber-400"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleEditReply}
+                            disabled={submitting || !editReplyText.trim()}
+                            className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {submitting ? t('saving') : common('submit')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingReplyId(null); setEditReplyText(''); }}
+                            className="rounded-md border border-gray-300 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            {common('cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 whitespace-pre-wrap text-gray-800">{reply.body}</p>
+                    )}
                   </div>
-                  <p className="mt-2 whitespace-pre-wrap text-gray-800">{reply.body}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
