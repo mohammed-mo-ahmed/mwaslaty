@@ -37,14 +37,18 @@ export default function MapView({
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
+  const initStarted = useRef(false);
 
   const defaultCenter: [number, number] = center ?? [30.0444, 31.2357];
 
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
+    if (!mapRef.current || mapInstance.current || initStarted.current) return;
+    initStarted.current = true;
 
     const initMap = async () => {
       const L = await import('leaflet');
+
+      if (!mapRef.current || mapInstance.current) return;
 
       if (!document.querySelector('link[href*="leaflet"]')) {
         const link = document.createElement('link');
@@ -73,17 +77,23 @@ export default function MapView({
       }
 
       mapInstance.current = map;
+      LRef.current = L;
     };
 
     initMap();
 
     return () => {
+      initStarted.current = false;
+      LRef.current = null;
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
       }
     };
   }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const LRef = useRef<any>(null);
 
   const allMarkers = useMemo(() => {
     const markers: MarkerData[] = [];
@@ -95,10 +105,8 @@ export default function MapView({
   }, [stops, places, origin, destination]);
 
   useEffect(() => {
-    if (!mapInstance.current || allMarkers.length === 0) return;
-
-    const L = window.L;
-    if (!L) return;
+    const L = LRef.current;
+    if (!mapInstance.current || !L || allMarkers.length === 0) return;
 
     const bounds: Array<[number, number]> = [];
     const markers: Array<ReturnType<typeof L.marker>> = [];
@@ -129,10 +137,8 @@ export default function MapView({
   }, [allMarkers]);
 
   useEffect(() => {
-    if (!mapInstance.current || !route || route.length === 0) return;
-
-    const L = window.L;
-    if (!L) return;
+    const L = LRef.current;
+    if (!mapInstance.current || !L || !route || route.length === 0) return;
 
     const polyline = L.polyline(route, {
       color: '#2563eb',
