@@ -47,4 +47,5 @@ export type ChatResponse = {
   text: string;
   routes?: RouteOption[];
   places?: PlaceResult[];
+  balance?: number;
 };

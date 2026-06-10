@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Clock, DollarSign, MapPin, Send, Star} from 'lucide-react';
+import {Clock, Coins, DollarSign, MapPin, Send, Star} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
@@ -106,14 +106,25 @@ function PlaceCard({place}: {place: PlaceResult}) {
 export function ChatbotPage() {
   const t = useTranslations('chatbot');
   const tCommon = useTranslations('common');
-  const {isAuthenticated} = useAuth();
+  const {isAuthenticated, user} = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {id: '1', text: t('intro'), isUser: false, timestamp: new Date()}
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    user.getIdToken().then(token => {
+      fetch('/api/points', {headers: {Authorization: `Bearer ${token}`}})
+        .then(res => res.json())
+        .then(data => { if (data.balance !== undefined) setBalance(data.balance); })
+        .catch(() => {});
+    });
+  }, [isAuthenticated, user]);
 
   const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({behavior: 'smooth'});
@@ -153,13 +164,30 @@ export function ChatbotPage() {
     setIsLoading(true);
 
     try {
+      const token = await user!.getIdToken();
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({message: text, history})
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        const errorMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.text || 'عذراً، حدث خطأ. حاول مرة أخرى.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+        return;
+      }
+
+      if (data.balance !== undefined) setBalance(data.balance);
 
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -252,6 +280,12 @@ export function ChatbotPage() {
 
       <div className="border-t border-gray-200/80 bg-white/60 backdrop-blur-md">
         <div className="mx-auto max-w-3xl px-6 py-4">
+          {balance !== null ? (
+            <div className="mb-2 flex items-center justify-end gap-1 text-xs text-gray-500">
+              <Coins className="h-3 w-3 text-amber-500" />
+              <span>{balance} points</span>
+            </div>
+          ) : null}
           <ServiceGate>
             <div className="flex items-end gap-3 rounded-2xl border border-gray-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition focus-within:border-amber-300 focus-within:shadow-md">
               <textarea
