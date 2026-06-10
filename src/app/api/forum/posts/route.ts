@@ -24,10 +24,9 @@ export async function GET() {
 
     return NextResponse.json({ posts });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to load posts' },
-      { status: 500 }
-    );
+    const msg = error instanceof Error ? error.message : 'Failed to load posts';
+    console.error('[forum GET] error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 

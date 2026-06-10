@@ -75,11 +75,15 @@ CREATE POLICY "forum_posts_select" ON forum_posts
 
 CREATE POLICY "forum_posts_insert" ON forum_posts
   FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "forum_posts_update" ON forum_posts
+  FOR UPDATE USING (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "forum_posts_delete" ON forum_posts
+  FOR DELETE USING (auth.jwt() ->> 'sub' = user_id);
 
-  CREATE INDEX IF NOT EXISTS idx_forum_posts_created ON forum_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_forum_posts_created ON forum_posts(created_at DESC);
 
 GRANT SELECT ON forum_posts TO anon;
-GRANT SELECT, INSERT ON forum_posts TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON forum_posts TO authenticated;
 GRANT USAGE ON SEQUENCE forum_posts_id_seq TO authenticated;
 
 -- 4. forum_replies
@@ -102,9 +106,13 @@ CREATE POLICY "forum_replies_select" ON forum_replies
 
 CREATE POLICY "forum_replies_insert" ON forum_replies
   FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "forum_replies_update" ON forum_replies
+  FOR UPDATE USING (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "forum_replies_delete" ON forum_replies
+  FOR DELETE USING (auth.jwt() ->> 'sub' = user_id);
 
-  CREATE INDEX IF NOT EXISTS idx_forum_replies_post ON forum_replies(post_id);
+CREATE INDEX IF NOT EXISTS idx_forum_replies_post ON forum_replies(post_id);
 
 GRANT SELECT ON forum_replies TO anon;
-GRANT SELECT, INSERT ON forum_replies TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON forum_replies TO authenticated;
 GRANT USAGE ON SEQUENCE forum_replies_id_seq TO authenticated;
