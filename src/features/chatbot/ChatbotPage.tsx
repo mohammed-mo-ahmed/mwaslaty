@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Clock, DollarSign, MapPin, Send, Star} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
+import MapView from '@/shared/components/MapView';
 import type {RouteOption, PlaceResult} from '@/shared/ai/types';
 
 type Message = {
@@ -223,6 +224,21 @@ export function ChatbotPage() {
                       {msg.places?.map((place) => (
                         <PlaceCard key={place.id} place={place} />
                       ))}
+                      {msg.places && msg.places.some(p => p.lat && p.lng) ? (
+                        <div className="mt-3">
+                          <MapView
+                            height="h-48"
+                            places={msg.places.filter(p => p.lat && p.lng).map(p => ({
+                              id: p.id,
+                              name: p.name,
+                              nameAr: p.name,
+                              lat: p.lat!,
+                              lng: p.lng!,
+                              type: 'place' as const,
+                            }))}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 )}

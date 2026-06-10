@@ -1,47 +1,14 @@
 ﻿import type {RouteOption, GeocodeResult} from '../types';
 import {geocode} from './geocode';
+import {searchLocalDatabase} from '../data';
+import {findStop} from '../data/stops';
 
 const OSRM_URL = 'https://router.project-osrm.org';
 
-const FALLBACK_STOPS: Record<string, {lat: number; lng: number}> = {
-  'رمسيس': {lat: 30.0636, lng: 31.2469},
-  'ramses': {lat: 30.0636, lng: 31.2469},
-  'التحرير': {lat: 30.0444, lng: 31.2357},
-  'tahrir': {lat: 30.0444, lng: 31.2357},
-  'المعادي': {lat: 29.9667, lng: 31.2667},
-  'maadi': {lat: 29.9667, lng: 31.2667},
-  'مدينة نصر': {lat: 30.0483, lng: 31.3656},
-  'nasr city': {lat: 30.0483, lng: 31.3656},
-  'مصر الجديدة': {lat: 30.1109, lng: 31.3309},
-  'heliopolis': {lat: 30.1109, lng: 31.3309},
-  'القاهرة الجديدة': {lat: 30.0159, lng: 31.4317},
-  'new cairo': {lat: 30.0159, lng: 31.4317},
-  'المطار': {lat: 30.1119, lng: 31.4101},
-  'airport': {lat: 30.1119, lng: 31.4101},
-  'العبور': {lat: 30.2147, lng: 31.4606},
-  'obour': {lat: 30.2147, lng: 31.4606},
-  'الشروق': {lat: 30.1431, lng: 31.6344},
-  'shorouk': {lat: 30.1431, lng: 31.6344},
-  'المهندسين': {lat: 30.0451, lng: 31.2107},
-  'mohandeseen': {lat: 30.0451, lng: 31.2107},
-  'الدقي': {lat: 30.0365, lng: 31.2091},
-  'dokki': {lat: 30.0365, lng: 31.2091},
-  'الجيزة': {lat: 30.0094, lng: 31.2089},
-  'giza': {lat: 30.0094, lng: 31.2089},
-  'السادس من أكتوبر': {lat: 29.9767, lng: 30.9474},
-  '6th october': {lat: 29.9767, lng: 30.9474},
-  'الأسكندرية': {lat: 31.2001, lng: 29.9187},
-  'alexandria': {lat: 31.2001, lng: 29.9187},
-  'المنصورة': {lat: 31.0419, lng: 31.3789},
-  'mansoura': {lat: 31.0419, lng: 31.3789},
-  'طنطا': {lat: 30.7865, lng: 31.0004},
-  'taanta': {lat: 30.7865, lng: 31.0004}
-};
-
 async function resolveCoords(location: string): Promise<GeocodeResult | null> {
-  const cached = FALLBACK_STOPS[location.toLowerCase().trim()];
-  if (cached) {
-    return {lat: cached.lat, lng: cached.lng, displayName: location};
+  const stop = findStop(location);
+  if (stop) {
+    return {lat: stop.lat, lng: stop.lng, displayName: stop.nameAr};
   }
 
   const result = await geocode(location + '، مصر');
@@ -91,6 +58,12 @@ export async function searchRoutes(
   origin: string,
   destination: string
 ): Promise<{routes: RouteOption[]; text: string}> {
+  const dbResult = await searchLocalDatabase(origin, destination);
+
+  if (dbResult.found) {
+    return {routes: dbResult.routes, text: dbResult.text};
+  }
+
   const [originCoords, destCoords] = await Promise.all([
     resolveCoords(origin),
     resolveCoords(destination)

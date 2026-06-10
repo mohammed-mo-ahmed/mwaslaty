@@ -5,6 +5,7 @@ import {Clock, DollarSign, MapPin, Navigation, Search} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
+import MapView from '@/shared/components/MapView';
 
 type RouteResult = {
   id: string;
@@ -106,12 +107,11 @@ export function SearchPage() {
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
         <h2 className="mb-4 text-xl font-semibold text-gray-950">{t('search.mapTitle')}</h2>
-        <div className="flex h-64 items-center justify-center rounded-md border-2 border-dashed border-gray-300 bg-gradient-to-br from-blue-100 to-amber-100 text-center">
-          <div>
-            <MapPin className="mx-auto mb-2 h-12 w-12 text-gray-400" />
-            <p className="text-gray-600">{t('search.mapEmpty')}</p>
-          </div>
-        </div>
+        <MapView
+          height="h-64"
+          origin={origin ? {id: 'origin', name: origin, nameAr: origin, lat: 30.0444, lng: 31.2357} : undefined}
+          destination={destination ? {id: 'destination', name: destination, nameAr: destination, lat: 30.0483, lng: 31.3656} : undefined}
+        />
       </div>
 
       {results.length > 0 ? (

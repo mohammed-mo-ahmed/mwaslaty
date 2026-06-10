@@ -115,7 +115,9 @@ async function searchByOverpass(
           address: el.tags?.['addr:full'] || el.tags?.['addr:street'] || '',
           distance: calcDistance(lat, lng, elLat, elLng),
           type: el.tags?.amenity || el.tags?.shop || el.tags?.leisure || '',
-          phone: el.tags?.phone || el.tags?.['contact:phone']
+          phone: el.tags?.phone || el.tags?.['contact:phone'],
+          lat: elLat,
+          lng: elLng,
         };
       });
   } catch {

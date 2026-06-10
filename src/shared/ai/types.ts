@@ -21,6 +21,8 @@ export type PlaceResult = {
   distance?: string;
   type?: string;
   phone?: string;
+  lat?: number;
+  lng?: number;
 };
 
 export type GeocodeResult = {

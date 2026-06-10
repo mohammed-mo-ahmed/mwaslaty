@@ -5,6 +5,8 @@ import Link from 'next/link';
 import {AlarmClock, ArrowLeft, ArrowRight, Bus, Clock, DollarSign, MapPin, Star, Train} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
 import {stops} from './stopsData';
+import MapView from '@/shared/components/MapView';
+import {findStop} from '@/shared/ai/data/stops';
 
 const routes = [
   {
@@ -45,6 +47,9 @@ export function StopDetailsPage({stopId}: {stopId: string}) {
   const common = useTranslations('common');
   const stop = stops.find((item) => item.id === stopId) ?? stops[0];
   const stopName = locale === 'ar' ? stop.nameAr : stop.name;
+  const transitStop = findStop(stop.nameAr);
+  const stopLat = transitStop?.lat ?? 30.0444;
+  const stopLng = transitStop?.lng ?? 31.2357;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -79,6 +84,20 @@ export function StopDetailsPage({stopId}: {stopId: string}) {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <MapView
+          height="h-64"
+          stops={[{
+            id: stop.id,
+            name: stop.name,
+            nameAr: stop.nameAr,
+            lat: stopLat,
+            lng: stopLng,
+            type: 'stop',
+          }]}
+        />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
