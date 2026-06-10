@@ -1,6 +1,10 @@
+import {config} from 'dotenv';
+import {resolve} from 'path';
 import {createClient} from '@supabase/supabase-js';
 import {stops} from '../src/shared/ai/data/stops';
 import {routes} from '../src/shared/ai/data/routes';
+
+config({path: resolve(__dirname, '../.env.local')});
 
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

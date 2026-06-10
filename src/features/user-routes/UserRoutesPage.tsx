@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {Clock, DollarSign, Plus, ThumbsDown, ThumbsUp, User, X} from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import {ServiceGate} from '@/shared/auth/ServiceGate';
@@ -9,59 +9,63 @@ import {useAuth} from '@/shared/auth/AuthProvider';
 type RouteType = 'Metro' | 'Bus' | 'Microbus';
 
 type UserRoute = {
-  id: string;
+  id: number;
   name: string;
   origin: string;
   destination: string;
   fare: string;
   duration: string;
   type: RouteType;
-  submittedBy: string;
-  votes: {up: number; down: number};
+  submitted_by: string;
+  votes_up: number;
+  votes_down: number;
   status: 'pending' | 'approved' | 'rejected';
-  submittedAt: Date;
+  created_at: string;
 };
 
-const userRoutes: UserRoute[] = [
+const mockRoutes: UserRoute[] = [
   {
-    id: '1',
+    id: 1,
     name: 'Express Microbus - New Cairo to Downtown',
     origin: 'New Cairo',
     destination: 'Downtown Cairo',
     fare: '12 EGP',
     duration: '45 min',
     type: 'Microbus',
-    submittedBy: 'Ahmed M.',
-    votes: {up: 24, down: 3},
+    submitted_by: 'Ahmed M.',
+    votes_up: 24,
+    votes_down: 3,
     status: 'approved',
-    submittedAt: new Date('2024-12-15')
+    created_at: '2024-12-15T00:00:00Z',
   },
   {
-    id: '2',
+    id: 2,
     name: 'Night Bus - Maadi to Airport',
     origin: 'Maadi',
     destination: 'Cairo Airport',
     fare: '25 EGP',
     duration: '1h 15m',
     type: 'Bus',
-    submittedBy: 'Sara K.',
-    votes: {up: 18, down: 2},
+    submitted_by: 'Sara K.',
+    votes_up: 18,
+    votes_down: 2,
     status: 'pending',
-    submittedAt: new Date('2024-12-20')
+    created_at: '2024-12-20T00:00:00Z',
   },
   {
-    id: '3',
+    id: 3,
     name: 'Alternative Route - Zamalek via Qasr El-Nil',
     origin: 'Zamalek',
     destination: 'Tahrir Square',
     fare: '4 EGP',
     duration: '20 min',
     type: 'Microbus',
-    submittedBy: 'Mohamed A.',
-    votes: {up: 8, down: 12},
+    submitted_by: 'Mohamed A.',
+    votes_up: 8,
+    votes_down: 12,
     status: 'rejected',
-    submittedAt: new Date('2024-12-18')
-  }
+    created_at: '2024-12-18T00:00:00Z',
+  },
 ];
 
 function statusColor(status: UserRoute['status']) {
@@ -89,21 +93,52 @@ function typeColor(type: RouteType) {
 export function UserRoutesPage() {
   const t = useTranslations('userRoutes');
   const common = useTranslations('common');
-  const {isAuthenticated} = useAuth();
+  const {isAuthenticated, user} = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [routes, setRoutes] = useState<UserRoute[]>(mockRoutes);
+  const [submitting, setSubmitting] = useState(false);
   const [newRoute, setNewRoute] = useState({
     name: '',
     origin: '',
     destination: '',
     fare: '',
     duration: '',
-    type: 'Bus' as RouteType
+    type: 'Bus' as RouteType,
   });
 
-  const handleSubmitRoute = () => {
-    if (!isAuthenticated) return;
-    setNewRoute({name: '', origin: '', destination: '', fare: '', duration: '', type: 'Bus'});
-    setShowAddForm(false);
+  useEffect(() => {
+    fetch('/api/data/user-routes')
+      .then(res => res.json())
+      .then(data => {
+        if (data.routes?.length > 0) setRoutes(data.routes);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSubmitRoute = async () => {
+    if (!isAuthenticated || !user) return;
+    setSubmitting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/data/user-routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newRoute),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setRoutes(prev => [data.route, ...prev]);
+      }
+    } catch {
+    } finally {
+      setNewRoute({name: '', origin: '', destination: '', fare: '', duration: '', type: 'Bus'});
+      setShowAddForm(false);
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -207,9 +242,10 @@ export function UserRoutesPage() {
                   <button
                     type="button"
                     onClick={handleSubmitRoute}
-                    className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                    disabled={submitting}
+                    className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {common('submit')}
+                    {submitting ? 'Submitting...' : common('submit')}
                   </button>
                 </div>
               </div>
@@ -219,7 +255,7 @@ export function UserRoutesPage() {
       ) : null}
 
       <div className="space-y-4">
-        {userRoutes.map((route) => (
+        {routes.map((route) => (
           <div key={route.id} className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-100">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -252,9 +288,9 @@ export function UserRoutesPage() {
               </span>
               <span className="flex items-center">
                 <User className="me-1 h-4 w-4" />
-                {route.submittedBy}
+                {route.submitted_by}
               </span>
-              <span>{route.submittedAt.toLocaleDateString()}</span>
+              <span>{new Date(route.created_at).toLocaleDateString()}</span>
             </div>
             <ServiceGate>
               <div className="flex gap-3">
@@ -263,14 +299,14 @@ export function UserRoutesPage() {
                   className="flex items-center gap-1 rounded-md px-3 py-2 text-emerald-700 hover:bg-emerald-50"
                 >
                   <ThumbsUp className="h-4 w-4" />
-                  {route.votes.up}
+                  {route.votes_up}
                 </button>
                 <button
                   type="button"
                   className="flex items-center gap-1 rounded-md px-3 py-2 text-red-700 hover:bg-red-50"
                 >
                   <ThumbsDown className="h-4 w-4" />
-                  {route.votes.down}
+                  {route.votes_down}
                 </button>
               </div>
             </ServiceGate>

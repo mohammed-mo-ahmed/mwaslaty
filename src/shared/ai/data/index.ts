@@ -7,7 +7,7 @@ import {getSupabase} from '@/shared/supabase/client';
 type DataSearchResult = {
   found: boolean;
   routes: RouteOption[];
-  source: 'database' | 'osrm';
+  source: 'database' | 'osrm' | 'supabase';
   text: string;
 };
 
@@ -15,8 +15,13 @@ async function loadCustomRoutes(): Promise<TransitRoute[]> {
   try {
     const supabase = getSupabase();
     if (!supabase) return [];
-    const {data} = await supabase.from('routes').select('*');
-    if (!data) return [];
+    const {data, error} = await supabase.from('routes').select('*');
+    if (error) {
+      console.error('[Supabase] loadCustomRoutes error:', error.message);
+      return [];
+    }
+    if (!data || data.length === 0) return [];
+    console.info(`[Supabase] Loaded ${data.length} custom routes`);
     return data.map((r: Record<string, unknown>) => ({
       id: r.id as string,
       fromId: r.from_id as string,
@@ -30,16 +35,23 @@ async function loadCustomRoutes(): Promise<TransitRoute[]> {
       transfers: r.transfers as number,
       steps: r.steps as Array<{instruction: string; type: string; duration: string}>,
     }));
-  } catch {}
-  return [];
+  } catch (err) {
+    console.error('[Supabase] loadCustomRoutes exception:', err);
+    return [];
+  }
 }
 
 async function loadCustomStops(): Promise<TransitStop[]> {
   try {
     const supabase = getSupabase();
     if (!supabase) return [];
-    const {data} = await supabase.from('stops').select('*');
-    if (!data) return [];
+    const {data, error} = await supabase.from('stops').select('*');
+    if (error) {
+      console.error('[Supabase] loadCustomStops error:', error.message);
+      return [];
+    }
+    if (!data || data.length === 0) return [];
+    console.info(`[Supabase] Loaded ${data.length} custom stops`);
     return data.map((s: Record<string, unknown>) => ({
       id: s.id as string,
       name: s.name as string,
@@ -50,8 +62,10 @@ async function loadCustomStops(): Promise<TransitStop[]> {
       lines: s.lines as string[],
       zone: s.zone as TransitStop['zone'],
     }));
-  } catch {}
-  return [];
+  } catch (err) {
+    console.error('[Supabase] loadCustomStops exception:', err);
+    return [];
+  }
 }
 
 function routeToRouteOption(r: TransitRoute): RouteOption {
@@ -69,12 +83,24 @@ function routeToRouteOption(r: TransitRoute): RouteOption {
   };
 }
 
+function mergeById<T extends {id: string}>(base: T[], overrides: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const item of base) map.set(item.id, item);
+  for (const item of overrides) map.set(item.id, item);
+  return Array.from(map.values());
+}
+
 export async function searchLocalDatabase(
   originQuery: string,
   destinationQuery: string
 ): Promise<DataSearchResult> {
-  const allStops = [...stops, ...(await loadCustomStops())];
-  const allRoutes = [...routes, ...(await loadCustomRoutes())];
+  const [customStops, customRoutes] = await Promise.all([
+    loadCustomStops(),
+    loadCustomRoutes(),
+  ]);
+
+  const allStops = mergeById(stops, customStops);
+  const allRoutes = mergeById(routes, customRoutes);
 
   const originStop = findStopInList(allStops, originQuery);
   const destStop = findStopInList(allStops, destinationQuery);
@@ -112,6 +138,8 @@ export async function searchLocalDatabase(
       (r.fromId === destStop.id && r.toId === originStop.id)
   );
 
+  const dataSource = customStops.length > 0 || customRoutes.length > 0 ? 'supabase' : 'database';
+
   if (matchedRoutes.length === 0) {
     return {
       found: false,
@@ -129,7 +157,7 @@ export async function searchLocalDatabase(
     return {
       found: true,
       routes: [routeToRouteOption(r)],
-      source: 'database',
+      source: dataSource,
       text: `لقيت طريق من ${originName} إلى ${destName}:\n• ${r.lineName}\n• المدة: ${r.duration}\n• التكلفة: ${r.cost}\n• عدد المحطات/التحويلات: ${r.transfers}`,
     };
   }
@@ -137,7 +165,7 @@ export async function searchLocalDatabase(
   return {
     found: true,
     routes: matchedRoutes.map(routeToRouteOption),
-    source: 'database',
+    source: dataSource,
     text: `لقيت ${matchedRoutes.length} طرق من ${originName} إلى ${destName}:`,
   };
 }
