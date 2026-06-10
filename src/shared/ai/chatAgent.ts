@@ -4,6 +4,7 @@ import {functionDeclarations} from './definitions';
 import {SYSTEM_PROMPT} from './systemPrompt';
 import {searchRoutes} from './tools/routeSearch';
 import {searchPlaces} from './tools/placeSearch';
+import {searchForum} from './tools/searchForum';
 import type {ChatHistoryItem, ChatResponse} from './types';
 
 function historyToContents(history: ChatHistoryItem[]): GeminiContent[] {
@@ -76,6 +77,21 @@ export async function processMessage(
                   cost: toolResult.routes[0]?.cost,
                   transfers: toolResult.routes[0]?.transfers
                 }
+              }
+            }
+          ]
+        });
+      } else if (fnCall.name === 'searchForum') {
+        const query = fnArgs.query ?? '';
+        const toolResult = await searchForum(query);
+
+        contents.push({
+          role: 'function',
+          parts: [
+            {
+              functionResponse: {
+                name: 'searchForum',
+                response: {text: toolResult.text}
               }
             }
           ]

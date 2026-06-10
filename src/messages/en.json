@@ -8,7 +8,7 @@
     "chatbot": "Chatbot",
     "search": "Search",
     "importantStops": "Important Stops",
-    "userRoutes": "User Routes",
+    "userRoutes": "Community Forum",
     "credits": "My Points",
     "login": "Login",
     "register": "Register Now",
@@ -124,19 +124,21 @@
     "gettingHereText": "This stop is accessible via multiple transportation modes. Check routes for available connections."
   },
   "userRoutes": {
-    "title": "Community Routes",
-    "subtitle": "Help improve Egypt's transportation network by sharing routes and voting on submissions.",
-    "addRoute": "Add Route",
-    "addNewRoute": "Add New Route",
-    "routeName": "Route Name",
-    "type": "Type",
-    "fare": "Fare",
-    "submittedBy": "Submitted by",
-    "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    }
+    "title": "Community Forum",
+    "subtitle": "Ask transportation questions, share routes, and help fellow travelers.",
+    "askQuestion": "Ask a Question",
+    "backToForum": "Back to Forum",
+    "questionTitle": "Question Title",
+    "titlePlaceholder": "e.g. How to get from Alexandria to Borg El Arab?",
+    "questionBody": "Details",
+    "bodyPlaceholder": "Describe your route, ask for recommendations, or share what you know...",
+    "posting": "Posting...",
+    "replies": "replies",
+    "reply": "reply",
+    "replyPlaceholder": "Write your answer or suggestion...",
+    "noReplies": "No replies yet. Be the first to help!",
+    "emptyTitle": "No questions yet",
+    "emptyText": "Be the first to ask a transportation question to the community!"
   },
   "credits": {
     "title": "My Points",

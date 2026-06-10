@@ -33,6 +33,24 @@ export const functionDeclarations: ToolDeclaration[] = [
     }
   },
   {
+    name: 'searchForum',
+    description:
+      'Search community forum questions and answers for transportation information in Egypt. ' +
+      'Returns relevant forum discussions including questions and replies from other users. ' +
+      'Use this when the user asks a question that might have been answered by the community before.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'Search query for finding relevant forum discussions — use the user\'s question as-is (e.g., "ازاي أوصل من الإسكندرية لبرج العرب", "cheapest route from Maadi to New Cairo").'
+        }
+      },
+      required: ['query']
+    }
+  },
+  {
     name: 'searchPlaces',
     description:
       'Search for places, points of interest, or businesses in Egypt. ' +

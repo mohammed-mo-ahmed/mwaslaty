@@ -19,11 +19,19 @@ export async function POST(request: NextRequest) {
     const decoded = await verifyFirebaseToken(authHeader.slice(7));
     const supabase = createAuthenticatedClient(decoded);
 
-    const {data: points} = await supabase
+    const {data: points, error: pointsError} = await supabase
       .from('user_points')
       .select('balance')
       .eq('user_id', decoded.uid)
       .maybeSingle();
+
+    if (pointsError) {
+      console.error('[chat] points lookup error:', pointsError.message);
+      return NextResponse.json<ChatResponse>(
+        {text: 'عذراً، حدث خطأ في التحقق من الرصيد.'},
+        {status: 500}
+      );
+    }
 
     const balance = points?.balance ?? 0;
 
@@ -49,17 +57,26 @@ export async function POST(request: NextRequest) {
     const result = await processMessage(message, history || []);
 
     const newBalance = balance - CHAT_COST;
-    await supabase
+
+    const {error: updateError} = await supabase
       .from('user_points')
       .update({balance: newBalance})
       .eq('user_id', decoded.uid);
 
-    await supabase.from('points_transactions').insert({
+    if (updateError) {
+      console.error('[chat] points update error:', updateError.message);
+    }
+
+    const {error: txError} = await supabase.from('points_transactions').insert({
       user_id: decoded.uid,
       amount: -CHAT_COST,
       type: 'chatbot_usage',
       description: `Chatbot query: "${message.slice(0, 60)}"`,
     });
+
+    if (txError) {
+      console.error('[chat] points tx error:', txError.message);
+    }
 
     return NextResponse.json<ChatResponse>({
       ...result,
