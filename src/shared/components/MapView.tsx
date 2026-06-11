@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import type {Map as LeafletMap} from 'leaflet';
 
 type MarkerData = {
@@ -38,6 +38,7 @@ export default function MapView({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const initStarted = useRef(false);
+  const [ready, setReady] = useState(false);
 
   const defaultCenter: [number, number] = center ?? [30.0444, 31.2357];
 
@@ -78,6 +79,7 @@ export default function MapView({
 
       mapInstance.current = map;
       LRef.current = L;
+      setReady(true);
     };
 
     initMap();
@@ -134,7 +136,7 @@ export default function MapView({
     return () => {
       markers.forEach(m => m.remove());
     };
-  }, [allMarkers]);
+  }, [allMarkers, ready]);
 
   useEffect(() => {
     const L = LRef.current;
@@ -150,7 +152,7 @@ export default function MapView({
     return () => {
       polyline.remove();
     };
-  }, [route]);
+  }, [route, ready]);
 
   return (
     <div className={`${height} w-full overflow-hidden rounded-lg`} ref={mapRef}>

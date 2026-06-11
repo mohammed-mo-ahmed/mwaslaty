@@ -68,6 +68,7 @@
     "metro": "Metro",
     "bus": "Bus",
     "microbus": "Microbus",
+    "multi": "Multi-Modal",
     "min": "min",
     "h": "h"
   },
@@ -86,26 +87,16 @@
     "cheapest": "Cheapest"
   },
   "search": {
-    "title": "Route Planner",
-    "subtitle": "Plan your journey across Egypt with step-by-step directions.",
-    "originPlaceholder": "Enter starting location",
-    "destinationPlaceholder": "Enter destination",
+    "title": "Route Explorer",
+    "subtitle": "Search transportation routes by name or number and explore them on the map.",
+    "placeholder": "Search by route name or number...",
+    "noResults": "No routes found",
+    "stopsOnLine": "Stops on this line",
     "mapTitle": "Route Map",
     "mapEmpty": "Interactive map will display here",
     "routeOptions": "Route Options",
-    "emptyTitle": "Ready to Plan Your Journey",
-    "emptyText": "Enter your starting point and destination to find the best routes across Egypt.",
-    "steps": {
-      "walkToMetro": "Walk to nearest Metro station",
-      "metroLine1": "Take Metro Line 1 to Sadat",
-      "transferL2": "Transfer to Metro Line 2",
-      "metroLine2": "Take Metro Line 2 to Giza",
-      "bus381": "Take Bus #381 to destination",
-      "walkToBus": "Walk to bus stop",
-      "bus174": "Take Bus #174 to Ramses",
-      "microbus927": "Transfer to Microbus #927",
-      "walkToDest": "Walk to destination"
-    }
+    "emptyTitle": "Search for a Route",
+    "emptyText": "Type a route name or number to explore it on the map."
   },
   "stops": {
     "title": "Important Transportation Stops",
