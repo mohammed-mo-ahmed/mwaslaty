@@ -595,12 +595,12 @@ export function UserRoutesPage() {
           )}
         </>
       ) : (
-        <div className="rounded-lg bg-gradient-to-r from-blue-600 to-amber-600 p-8 text-center text-white">
+        <div className="rounded-lg bg-amber-600 p-8 text-center text-white">
           <h2 className="text-2xl font-bold">{t('loginRequired')}</h2>
           <p className="mt-2">{t('loginRequiredText')}</p>
           <Link
             href={`/${locale}/signup`}
-            className="mt-5 inline-flex items-center rounded-md bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-gray-100"
+            className="mt-5 inline-flex items-center rounded-md bg-white px-5 py-3 font-semibold text-amber-700 hover:bg-gray-100"
           >
             {t('signupNow')}
           </Link>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useEffect, useState} from 'react';
 import {ArrowRight, MapPin, MessageCircle, Search, Users} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
+import {useAuth} from '@/shared/auth/AuthProvider';
 
 const ARABIC_FONTS = [
   '"Traditional Arabic", serif',
@@ -31,7 +32,7 @@ function AnimatedWord({children}: {children: string}) {
 
   return (
     <span
-      className={`inline-block text-amber-600 animate-font-glow ${isArabic ? 'text-6xl md:text-8xl' : ''}`}
+      className={`inline-block text-amber-600 animate-font-glow ${isArabic ? 'text-5xl sm:text-6xl lg:text-8xl' : ''}`}
       style={{fontFamily: fonts[fontIndex]}}
     >
       {children}
@@ -52,6 +53,7 @@ function highlightText(text: string) {
 export function HomePage() {
   const locale = useLocale();
   const t = useTranslations('home');
+  const {isAuthenticated} = useAuth();
 
   const features = [
     {
@@ -88,18 +90,20 @@ export function HomePage() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <section className="mb-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
-          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-gray-950 md:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-gray-950 md:text-6xl break-words">
             {highlightText(t('headline'))}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600">{t('description')}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href={`/${locale}/signup`}
-              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm hover:bg-blue-700"
-            >
-              {t('registerNow')}
-              <ArrowRight className="ms-2 h-5 w-5" />
-            </Link>
+            {!isAuthenticated ? (
+              <Link
+                href={`/${locale}/signup`}
+                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                {t('registerNow')}
+                <ArrowRight className="ms-2 h-5 w-5" />
+              </Link>
+            ) : null}
             <Link
               href={`/${locale}/chatbot`}
               className="inline-flex items-center justify-center rounded-md border border-amber-600 px-6 py-3 font-semibold text-amber-700 hover:bg-amber-50"
