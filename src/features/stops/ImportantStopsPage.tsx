@@ -2,16 +2,32 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {ArrowRight, Bus, MapPin, Train} from 'lucide-react';
+import {ArrowRight, Bus, Search, Train} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
+import {useAuth} from '@/shared/auth/AuthProvider';
 import {loadCSVData} from '@/shared/utils/dataLoader';
 import {stops as staticStops, Stop} from './stopsData';
 
 export function ImportantStopsPage() {
   const locale = useLocale();
   const t = useTranslations('stops');
+  const {isAuthenticated} = useAuth();
   const [stopsData, setStopsData] = useState<Stop[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredStops = useMemo(() => {
+    if (!searchQuery.trim()) return stopsData;
+    const q = searchQuery.toLowerCase();
+    return stopsData.filter(
+      stop =>
+        stop.name.toLowerCase().includes(q) ||
+        stop.nameAr.toLowerCase().includes(q) ||
+        stop.description.toLowerCase().includes(q) ||
+        (stop.descriptionAr && stop.descriptionAr.toLowerCase().includes(q)) ||
+        stop.connections.some(c => c.toLowerCase().includes(q))
+    );
+  }, [stopsData, searchQuery]);
 
   useEffect(() => {
     loadCSVData<Stop>('/data/stops.csv')
@@ -46,8 +62,21 @@ export function ImportantStopsPage() {
         <p className="mt-2 text-gray-600">{t('subtitle')}</p>
       </div>
 
+      {isAuthenticated ? (
+        <div className="relative mb-8">
+          <Search className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('searchPlaceholder')}
+            className="w-full rounded-md border border-gray-300 py-3 pe-4 ps-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          />
+        </div>
+      ) : null}
+
+      {filteredStops.length > 0 ? (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {stopsData.map((stop) => (
+        {filteredStops.map((stop) => (
           <Link
             key={stop.id}
             href={`/${locale}/stops/${stop.id}`}
@@ -101,18 +130,13 @@ export function ImportantStopsPage() {
           </Link>
         ))}
       </div>
-
-      <div className="mt-10 rounded-lg bg-gradient-to-r from-blue-600 to-amber-600 p-8 text-center text-white">
-        <h2 className="text-2xl font-bold">{t('notFoundTitle')}</h2>
-        <p className="mt-2">{t('notFoundText')}</p>
-        <Link
-          href={`/${locale}/user-routes`}
-          className="mt-5 inline-flex items-center rounded-md bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-gray-100"
-        >
-          <MapPin className="me-2 h-5 w-5" />
-          {t('addRoute')}
-        </Link>
-      </div>
+      ) : (
+        <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-100">
+          <Search className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <h3 className="text-lg font-semibold text-gray-950">{t('noSearchResults')}</h3>
+          <p className="mt-2 text-gray-600">{t('noSearchResultsText')}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Coins, Gift, Bot, Search, MapPin, Users, TrendingUp, AlertCircle} from 'lucide-react';
 import {useTranslations} from 'next-intl';
-import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
 
 type Transaction = {
@@ -75,7 +74,6 @@ export function CreditsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <ServiceGate>
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-950">{t('title')}</h1>
           <p className="mt-2 text-gray-600">{t('subtitle')}</p>
@@ -193,7 +191,6 @@ export function CreditsPage() {
             </div>
           )}
         </div>
-      </ServiceGate>
     </div>
   );
 }

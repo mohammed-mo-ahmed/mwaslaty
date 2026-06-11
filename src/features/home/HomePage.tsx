@@ -1,8 +1,53 @@
 'use client';
 
 import Link from 'next/link';
+import {useEffect, useState} from 'react';
 import {ArrowRight, MapPin, MessageCircle, Search, Users} from 'lucide-react';
 import {useLocale, useTranslations} from 'next-intl';
+
+const ARABIC_FONTS = [
+  '"Traditional Arabic", serif',
+  '"Sakkal Majalla", serif',
+  '"Arabic Typesetting", serif',
+];
+
+const LATIN_FONTS = [
+  'Georgia, "Times New Roman", serif',
+  '"Courier New", Consolas, monospace',
+  '"Segoe Script", "Bradley Hand", cursive',
+];
+
+function AnimatedWord({children}: {children: string}) {
+  const isArabic = /[\u0600-\u06FF]/.test(children);
+  const fonts = isArabic ? ARABIC_FONTS : LATIN_FONTS;
+  const [fontIndex, setFontIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFontIndex((prev) => (prev + 1) % fonts.length);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [fonts.length]);
+
+  return (
+    <span
+      className={`inline-block text-amber-600 animate-font-glow ${isArabic ? 'text-6xl md:text-8xl' : ''}`}
+      style={{fontFamily: fonts[fontIndex]}}
+    >
+      {children}
+    </span>
+  );
+}
+
+function highlightText(text: string) {
+  const parts = text.split(/(Egypt|مصر)/);
+  return parts.map((part, i) => {
+    if (part === 'Egypt' || part === 'مصر') {
+      return <AnimatedWord key={i}>{part}</AnimatedWord>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
 
 export function HomePage() {
   const locale = useLocale();
@@ -44,7 +89,7 @@ export function HomePage() {
       <section className="mb-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
           <h1 className="max-w-3xl text-4xl font-bold leading-tight text-gray-950 md:text-6xl">
-            {t('headline')}
+            {highlightText(t('headline'))}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-600">{t('description')}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">

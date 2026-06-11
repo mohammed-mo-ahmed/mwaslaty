@@ -3,8 +3,8 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Clock, Coins, DollarSign, MapPin, Send, Star} from 'lucide-react';
 import {useTranslations} from 'next-intl';
-import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
+import {useRequireAuth} from '@/shared/auth/useRequireAuth';
 import MapView from '@/shared/components/MapView';
 import type {RouteOption, PlaceResult} from '@/shared/ai/types';
 
@@ -107,6 +107,7 @@ export function ChatbotPage() {
   const t = useTranslations('chatbot');
   const tCommon = useTranslations('common');
   const {isAuthenticated, user} = useAuth();
+  const {requireAuth} = useRequireAuth();
   const [messages, setMessages] = useState<Message[]>([
     {id: '1', text: t('intro'), isUser: false, timestamp: new Date()}
   ]);
@@ -143,7 +144,11 @@ export function ChatbotPage() {
 
   const handleSend = useCallback(async () => {
     const text = inputValue.trim();
-    if (!isAuthenticated || !text || isLoading) return;
+    if (!text || isLoading) return;
+    if (!isAuthenticated) {
+      requireAuth(() => {});
+      return;
+    }
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -286,28 +291,26 @@ export function ChatbotPage() {
               <span>{balance} points</span>
             </div>
           ) : null}
-          <ServiceGate>
-            <div className="flex items-end gap-3 rounded-2xl border border-gray-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition focus-within:border-amber-300 focus-within:shadow-md">
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t('placeholder')}
-                disabled={isLoading}
-                className="max-h-40 flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={isLoading || !inputValue.trim()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-40"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </div>
-          </ServiceGate>
+          <div className="flex items-end gap-3 rounded-2xl border border-gray-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition focus-within:border-amber-300 focus-within:shadow-md">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('placeholder')}
+              disabled={isLoading}
+              className="max-h-40 flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={isLoading || !inputValue.trim()}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-40"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

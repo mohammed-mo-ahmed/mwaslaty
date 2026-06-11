@@ -1,10 +1,11 @@
 'use client';
 
-import {useCallback, useEffect, useState} from 'react';
-import {MessageSquare, Pencil, Plus, Send, Trash2, User, X} from 'lucide-react';
+import Link from 'next/link';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {MessageSquare, Pencil, Plus, Search, Send, Trash2, User, X} from 'lucide-react';
 import {useTranslations} from 'next-intl';
-import {ServiceGate} from '@/shared/auth/ServiceGate';
 import {useAuth} from '@/shared/auth/AuthProvider';
+import {useRequireAuth} from '@/shared/auth/useRequireAuth';
 
 type ForumPost = {
   id: number;
@@ -52,6 +53,7 @@ export function UserRoutesPage() {
   const t = useTranslations('userRoutes');
   const common = useTranslations('common');
   const {isAuthenticated, user} = useAuth();
+  const {requireAuth} = useRequireAuth();
   const locale = (typeof window !== 'undefined' && window.location.pathname.startsWith('/ar')) ? 'ar' : 'en';
 
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -65,6 +67,17 @@ export function UserRoutesPage() {
   const [editingPost, setEditingPost] = useState<{title: string; body: string} | null>(null);
   const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
   const [editReplyText, setEditReplyText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery.trim()) return posts;
+    const q = searchQuery.toLowerCase();
+    return posts.filter(
+      post =>
+        post.title.toLowerCase().includes(q) ||
+        post.body.toLowerCase().includes(q)
+    );
+  }, [posts, searchQuery]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -77,7 +90,10 @@ export function UserRoutesPage() {
     }
   }, []);
 
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+  useEffect(() => {
+    if (isAuthenticated) fetchPosts();
+    else setLoading(false);
+  }, [fetchPosts, isAuthenticated]);
 
   const openPost = async (post: ForumPost) => {
     setSelectedPost(post);
@@ -99,7 +115,11 @@ export function UserRoutesPage() {
   };
 
   const handleCreatePost = async () => {
-    if (!user || submitting || !newPost.title.trim() || !newPost.body.trim()) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (submitting || !newPost.title.trim() || !newPost.body.trim()) return;
     setSubmitting(true);
     try {
       const token = await user.getIdToken();
@@ -124,7 +144,11 @@ export function UserRoutesPage() {
   };
 
   const handleEditPost = async () => {
-    if (!user || !selectedPost || !editingPost || submitting) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (!selectedPost || !editingPost || submitting) return;
     setSubmitting(true);
     try {
       const token = await user.getIdToken();
@@ -149,7 +173,11 @@ export function UserRoutesPage() {
   };
 
   const handleDeletePost = async () => {
-    if (!user || !selectedPost || submitting) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (!selectedPost || submitting) return;
     if (!confirm(locale === 'ar' ? 'هل أنت متأكد من حذف هذا السؤال؟' : 'Are you sure you want to delete this question?')) return;
     setSubmitting(true);
     try {
@@ -169,7 +197,11 @@ export function UserRoutesPage() {
   };
 
   const handleReply = async () => {
-    if (!user || !selectedPost || submitting || !replyText.trim()) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (!selectedPost || submitting || !replyText.trim()) return;
     setSubmitting(true);
     try {
       const token = await user.getIdToken();
@@ -201,7 +233,11 @@ export function UserRoutesPage() {
   };
 
   const handleEditReply = async () => {
-    if (!user || editingReplyId === null || submitting || !editReplyText.trim()) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (editingReplyId === null || submitting || !editReplyText.trim()) return;
     setSubmitting(true);
     try {
       const token = await user.getIdToken();
@@ -226,7 +262,11 @@ export function UserRoutesPage() {
   };
 
   const handleDeleteReply = async (replyId: number) => {
-    if (!user || submitting) return;
+    if (!user) {
+      requireAuth(() => {});
+      return;
+    }
+    if (submitting) return;
     if (!confirm(locale === 'ar' ? 'هل أنت متأكد من حذف هذا الرد؟' : 'Are you sure you want to delete this reply?')) return;
     setSubmitting(true);
     try {
@@ -404,7 +444,6 @@ export function UserRoutesPage() {
             </div>
           )}
 
-          <ServiceGate>
             <div className="mt-6">
               <textarea
                 rows={3}
@@ -423,7 +462,6 @@ export function UserRoutesPage() {
                 {common('submit')}
               </button>
             </div>
-          </ServiceGate>
         </div>
       </div>
     );
@@ -431,114 +469,141 @@ export function UserRoutesPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-950">{t('title')}</h1>
-          <p className="mt-2 text-gray-600">{t('subtitle')}</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowAskForm(true)}
-          className="inline-flex items-center justify-center rounded-md bg-amber-600 px-5 py-3 font-semibold text-white hover:bg-amber-700"
-        >
-          <Plus className="me-2 h-5 w-5" />
-          {t('askQuestion')}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-950">{t('title')}</h1>
+        <p className="mt-2 text-gray-600">{t('subtitle')}</p>
       </div>
 
-      {showAskForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-950">{t('askQuestion')}</h2>
-              <button
-                type="button"
-                onClick={() => setShowAskForm(false)}
-                className="rounded-md p-2 hover:bg-gray-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      {isAuthenticated ? (
+        <>
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1">
+              <Search className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('searchPlaceholder')}
+                className="w-full rounded-md border border-gray-300 py-3 pe-4 ps-10 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+              />
             </div>
-            <ServiceGate>
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('questionTitle')}
-                  <input
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                    placeholder={t('titlePlaceholder')}
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none transition focus:border-amber-400"
-                  />
-                </label>
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('questionBody')}
-                  <textarea
-                    rows={5}
-                    value={newPost.body}
-                    onChange={(e) => setNewPost({...newPost, body: e.target.value})}
-                    placeholder={t('bodyPlaceholder')}
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none transition focus:border-amber-400"
-                  />
-                </label>
-                <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAskForm(true)}
+              className="inline-flex shrink-0 items-center justify-center rounded-md bg-amber-600 px-5 py-3 font-semibold text-white hover:bg-amber-700"
+            >
+              <Plus className="me-2 h-5 w-5" />
+              {t('askQuestion')}
+            </button>
+          </div>
+
+          {showAskForm ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-950">{t('askQuestion')}</h2>
                   <button
                     type="button"
                     onClick={() => setShowAskForm(false)}
-                    className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                    className="rounded-md p-2 hover:bg-gray-100"
                   >
-                    {common('cancel')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreatePost}
-                    disabled={submitting || !newPost.title.trim() || !newPost.body.trim()}
-                    className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {submitting ? t('posting') : common('submit')}
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {t('questionTitle')}
+                    <input
+                      value={newPost.title}
+                      onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                      placeholder={t('titlePlaceholder')}
+                      className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none transition focus:border-amber-400"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    {t('questionBody')}
+                    <textarea
+                      rows={5}
+                      value={newPost.body}
+                      onChange={(e) => setNewPost({...newPost, body: e.target.value})}
+                      placeholder={t('bodyPlaceholder')}
+                      className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none transition focus:border-amber-400"
+                    />
+                  </label>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAskForm(false)}
+                      className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                    >
+                      {common('cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreatePost}
+                      disabled={submitting || !newPost.title.trim() || !newPost.body.trim()}
+                      className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {submitting ? t('posting') : common('submit')}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </ServiceGate>
-          </div>
-        </div>
-      ) : null}
+            </div>
+          ) : null}
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-200 border-t-amber-600" />
-        </div>
-      ) : posts.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-100">
-          <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-950">{t('emptyTitle')}</h3>
-          <p className="mt-2 text-gray-600">{t('emptyText')}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {posts.map((post) => (
-            <button
-              type="button"
-              key={post.id}
-              onClick={() => openPost(post)}
-              className="w-full rounded-lg bg-white p-5 text-start shadow-sm ring-1 ring-gray-100 transition hover:ring-2 hover:ring-amber-300"
-            >
-              <h3 className="text-lg font-semibold text-gray-950">{post.title}</h3>
-              <p className="mt-1 line-clamp-2 text-sm text-gray-600">
-                {post.body}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-200 border-t-amber-600" />
+            </div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="rounded-lg bg-white p-12 text-center shadow-sm ring-1 ring-gray-100">
+              <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+              <h3 className="text-lg font-semibold text-gray-950">
+                {posts.length === 0 ? t('emptyTitle') : t('noSearchResults')}
+              </h3>
+              <p className="mt-2 text-gray-600">
+                {posts.length === 0 ? t('emptyText') : t('noSearchResultsText')}
               </p>
-              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  {post.author_name}
-                </span>
-                <span>{timeAgo(post.created_at, locale)}</span>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  {post.replyCount} {post.replyCount === 1 ? t('reply') : t('replies')}
-                </span>
-              </div>
-            </button>
-          ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredPosts.map((post) => (
+                <button
+                  type="button"
+                  key={post.id}
+                  onClick={() => openPost(post)}
+                  className="w-full rounded-lg bg-white p-5 text-start shadow-sm ring-1 ring-gray-100 transition hover:ring-2 hover:ring-amber-300"
+                >
+                  <h3 className="text-lg font-semibold text-gray-950">{post.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+                    {post.body}
+                  </p>
+                  <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {post.author_name}
+                    </span>
+                    <span>{timeAgo(post.created_at, locale)}</span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      {post.replyCount} {post.replyCount === 1 ? t('reply') : t('replies')}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="rounded-lg bg-gradient-to-r from-blue-600 to-amber-600 p-8 text-center text-white">
+          <h2 className="text-2xl font-bold">{t('loginRequired')}</h2>
+          <p className="mt-2">{t('loginRequiredText')}</p>
+          <Link
+            href={`/${locale}/signup`}
+            className="mt-5 inline-flex items-center rounded-md bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-gray-100"
+          >
+            {t('signupNow')}
+          </Link>
         </div>
       )}
     </div>

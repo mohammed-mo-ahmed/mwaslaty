@@ -20,6 +20,21 @@ body {
   font-family: Cairo, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
+.animate-font-glow {
+  animation: font-glow 2s ease-in-out infinite;
+}
+
+@keyframes font-glow {
+  0%, 100% {
+    text-shadow: 0 0 0 transparent;
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(217, 119, 6, 0.35);
+    filter: brightness(1.08);
+  }
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
