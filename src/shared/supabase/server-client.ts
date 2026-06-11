@@ -1,12 +1,12 @@
 import { createHmac } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import type { DecodedIdToken } from 'firebase-admin/auth';
+import type { FirebaseTokenPayload } from '@/shared/firebase/admin';
 
 function base64url(buf: Buffer): string {
   return buf.toString('base64url');
 }
 
-function mintSupabaseJwt(decoded: DecodedIdToken): string {
+function mintSupabaseJwt(decoded: FirebaseTokenPayload): string {
   const secret = process.env.SUPABASE_JWT_SECRET;
   if (!secret) throw new Error('Missing SUPABASE_JWT_SECRET env var');
 
@@ -31,7 +31,7 @@ function mintSupabaseJwt(decoded: DecodedIdToken): string {
   return `${headerB64}.${payloadB64}.${signature}`;
 }
 
-export function createAuthenticatedClient(decoded: DecodedIdToken) {
+export function createAuthenticatedClient(decoded: FirebaseTokenPayload) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
